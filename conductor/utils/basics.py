@@ -38,12 +38,17 @@ class TopLogST:
         self._cleanup_log_files(log_dir)
         logger = logging.getLogger(name)
         logger.propagate = False
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
         fmt = logging.Formatter('%(asctime)s - %(process)d - %(name)s - %(lineno)d - %(levelname)s - %(message)s')
         fh = logging.FileHandler(self._log_out_file, encoding='utf-8')
-        fh.setLevel(logging.DEBUG)
+        fh.setLevel(logging.INFO)
         fh.setFormatter(fmt)
         logger.addHandler(fh)
+
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(fmt)
+        logger.addHandler(ch)
         return logger
 
 

@@ -3,7 +3,7 @@ import re
 import shutil
 import hashlib
 import time
-from basics import get_logger
+from .basics import get_logger
 
 log = get_logger(os.path.basename(__file__))
 

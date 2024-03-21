@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $# -ne 5 ]; then
+if [ $# -ne 6 ]; then
   echo "Usage: $0 <trainset> <testset> <recipe> <epoch> <avg> <size> "
   exit 1
 fi
@@ -15,20 +15,20 @@ size=$6
 
 case $trainset in
   commonvoice)
-    bpe_model="/tests/prepared_data_devtest/commonvoice-16-en-dev/data/en/lang_bpe_500/bpe.model"
-    lang_dir="/tests/prepared_data_devtest/commonvoice-16-en-dev/data/en/lang_bpe_500"
+    bpe_model="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/commonvoice-16-en-dev/data/en/lang_bpe_500/bpe.model"
+    lang_dir="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/commonvoice-16-en-dev/data/en/lang_bpe_500"
     ;;
   gigaspeech)
-    bpe_model="/tests/prepared_data_devtest/giga-dev-dataset-fbank/data/lang_bpe_500/bpe.model"
-    lang_dir="/tests/prepared_data_devtest/giga-dev-dataset-fbank/data/lang_bpe_500"
+    bpe_model="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/giga-dev-dataset-fbank/data/lang_bpe_500/bpe.model"
+    lang_dir="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/giga-dev-dataset-fbank/data/lang_bpe_500"
     ;;
   libriheavy)
-    bpe_model="/tests/prepared_data_devtest/libriheavy-dev/data/lang_bpe_500/bpe.model"
-    lang_dir="/tests/prepared_data_devtest/libriheavy-dev/data/lang_bpe_500"
+    bpe_model="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/libriheavy-dev/data/lang_bpe_500/bpe.model"
+    lang_dir="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/libriheavy-dev/data/lang_bpe_500"
     ;;
   librispeech)
-    bpe_model="/tests/prepared_data_devtest/librispeech-dev-dataset-fbank/data/lang_bpe_500/bpe.model"
-    lang_dir="/tests/prepared_data_devtest/librispeech-dev-dataset-fbank/data/lang_bpe_500"
+    bpe_model="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/librispeech-dev-dataset-fbank/data/lang_bpe_500/bpe.model"
+    lang_dir="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/librispeech-dev-dataset-fbank/data/lang_bpe_500"
     ;;
   *)
     echo "Unknown dataset: $trainset"

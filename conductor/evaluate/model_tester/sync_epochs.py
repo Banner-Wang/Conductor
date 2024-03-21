@@ -1,6 +1,9 @@
 import os
+import sys
 import argparse
-
+sys.path.append(".")
+sys.path.append("..")
+sys.path.append("../..")
 from conductor.utils import get_sorted_epochs, copy_file, get_logger
 
 log = get_logger(os.path.basename(__file__))
@@ -55,6 +58,7 @@ if __name__ == "__main__":
 
     try:
         src_epoch, dest_epoch = sync_epochs(args.src_path, args.dest_path, args.start_epoch)
-        print(f"Sync completed. src_epoch: {src_epoch}, dest_epoch: {dest_epoch}")
+        log.info(f"Sync completed. src_epoch: {src_epoch}, dest_epoch: {dest_epoch}")
+        print(f"{src_epoch},{dest_epoch}")  # 打印src_epoch和dest_epoch，用逗号分隔
     except Exception as e:
-        print(f"An error occurred: {e}")
+        log.info(f"An error occurred: {e}")
