@@ -71,7 +71,7 @@ if [ "$remote_epoch" -le "$local_epoch" ]; then
     exit 0
 fi
 
-if docker exec -it "$docker_name" sh -c "$file_dir/ln_exp.sh $trainset \"$file_dir/models\" $recipe"; then
+if ! docker exec -it "$docker_name" sh -c "$file_dir/ln_exp.sh $trainset \"$file_dir/models\" $recipe"; then
     echo "Error: Failed to create soft link"
     exit 1
 fi
