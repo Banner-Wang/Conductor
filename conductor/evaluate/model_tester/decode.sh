@@ -16,14 +16,14 @@ size=''
 start_epoch=1  # 默认值
 
 # 解析命令行选项
-while getopts ":d:n:r:t:s:" opt; do
+while getopts ":d:n:r:t:s:e:" opt; do
   case $opt in
     d) model_dir_path=$OPTARG ;;
     n) docker_name=$OPTARG ;;
     r) recipe=$OPTARG ;;
     t) trainset=$OPTARG ;;
     s) size=$OPTARG ;;
-    s) start_epoch=$OPTARG ;;
+    e) start_epoch=$OPTARG ;;
     \?) echo "Invalid option: -$OPTARG" >&2; usage ;;
     :) echo "Option -$OPTARG requires an argument." >&2; usage ;;
   esac
@@ -34,7 +34,8 @@ if [ -z "$model_dir_path" ] || [ -z "$docker_name" ]; then
   usage
 fi
 
-file_dir=$(dirname "$0")
+file_dir=$(dirname "$(readlink -f "$0")")
+echo "$file_dir"
 
 model_name=$(basename "$model_dir_path")
 
@@ -61,7 +62,7 @@ if [ ! -d "$file_dir/models" ]; then
 fi
 
 # 下载模型
-output=$(python3 $file_dir/sync_epochs.py "$model_dir_path" "$file_dir/models" --start_epoch $start_epoch)
+output=$(python3 "$file_dir/sync_epochs.py" "$model_dir_path" "$file_dir/models" --start_epoch $start_epoch)
 remote_epoch=$(echo $output | cut -d ',' -f1)
 local_epoch=$(echo $output | cut -d ',' -f2)
 

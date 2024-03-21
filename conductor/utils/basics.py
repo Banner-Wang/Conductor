@@ -4,8 +4,11 @@ import logging
 import os
 import threading
 
-from conductor.utils import log_dir
 from dingtalkchatbot.chatbot import DingtalkChatbot
+
+base_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(base_dir)
+log_dir = os.path.join(root_dir, 'log')
 
 
 class TopLogST:

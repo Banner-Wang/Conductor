@@ -18,16 +18,16 @@ target=$(readlink -f data)
 
 case $dataset in
   commonvoice)
-    expected_target="/tests/prepared_data_devtest/commonvoice-16-en-dev/data"
+    expected_target="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/commonvoice-16-en-dev/data"
     ;;
   gigaspeech)
-    expected_target="/tests/prepared_data_devtest/giga-dev-dataset-fbank/data"
+    expected_target="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/giga-dev-dataset-fbank/data"
     ;;
   libriheavy)
-    expected_target="/tests/prepared_data_devtest/libriheavy-dev/data"
+    expected_target="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/librispeech-dev-dataset-fbank/data"
     ;;
   librispeech)
-    expected_target="/tests/prepared_data_devtest/librispeech-dev-dataset-fbank/data"
+    expected_target="/data/AI_VOICE_WORKSPACE/asr/Conductor/prepared_data_devtest/librispeech-dev-dataset-fbank/data"
     ;;
   *)
     echo "Unknown dataset: $dataset"

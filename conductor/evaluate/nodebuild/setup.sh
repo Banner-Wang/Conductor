@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义变量
-WORKSPACE_DIR="/data/AI_VOICE_WORKSPACE/asr/tests"
+WORKSPACE_DIR="/data/AI_VOICE_WORKSPACE/asr/Conductor"
 ICEFALL_REPO="https://github.com/gaojiaodeng/icefall.git"
 ICEFALL_BRANCH="gigaspeech_modify"
 DOCKER_IMAGE="k2fsa/icefall:torch2.0.0-cuda11.7"
