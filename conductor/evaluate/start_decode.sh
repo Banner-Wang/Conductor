@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ $# -ne 5 ]; then
-  echo "Usage: $0 <trainset> <testset> <recipe> <epoch> <size>"
+  echo "Usage: $0 <trainset> <testset> <recipe> <epoch> <avg> <size> "
   exit 1
 fi
 
@@ -9,7 +9,8 @@ trainset=$1
 testset=$2
 recipe=$3
 epoch=$4
-size=$5
+avg=$5
+size=$6
 
 
 case $trainset in
@@ -55,7 +56,7 @@ if [ "$size" == "medium" ]; then
   python3 ./$recipe/decode.py \
     --exp-dir ./$recipe/exp \
     --epoch $epoch \
-    --avg 1 \
+    --avg $avg \
     --bpe-model $bpe_model \
     --lang-dir $lang_dir \
     --max-duration 150 \
@@ -65,7 +66,7 @@ elif [ "$size" == "large" ]; then
   python3 ./$recipe/decode.py \
     --exp-dir ./$recipe/exp \
     --epoch $epoch \
-    --avg 1 \
+    --avg $avg \
     --bpe-model $bpe_model \
     --lang-dir $lang_dir \
     --max-duration 150 \

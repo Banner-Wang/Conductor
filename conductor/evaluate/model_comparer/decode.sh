@@ -30,11 +30,12 @@ if [ -z "$model_dir_path" ] || [ -z "$docker_name" ]; then
   usage
 fi
 
-root_dir=$(dirname "$0")
+file_dir=$(dirname "$0")
 epoch=999
+avg=1
 model_name=$(basename "$model_dir_path")
 
-if [ -z "$recipe" ]; then
+if [ -z "$size" ]; then
   size=$(echo "$model_name" | cut -d'_' -f3)
 fi
 
@@ -49,38 +50,43 @@ fi
 # 定义可选的数据集列表
 datasets=("commonvoice" "gigaspeech" "libriheavy" "librispeech")
 
-# 检查trainset变量值是否在可选列表中
-if ! [[ " ${datasets[@]} " =~ " $trainset " ]]; then
-    echo "Error: Invalid trainset value '$trainset'. Allowed values are: ${datasets[*]}"
-    exit 1
-fi
-
-# 下载模型
-bash "$root_dir/download_model.sh" "$model_dir_path" "$root_dir/models"
-
-# 建立软链接和检查数据链接
+# 检查测试数据集是否完成链接
 for dataset in "${datasets[@]}"; do
-  docker exec -it "$docker_name" sh -c "/tests/ln_model.sh $dataset $model_name $epoch $recipe"
   if ! docker exec -it "$docker_name" sh -c "/tests/check_data_link.sh $dataset"; then
     echo "Data link check failed for dataset $dataset. Aborting."
     exit 1
   fi
 done
 
-# 执行测试
-for testset in "${datasets[@]}"; do
-  echo "Decoding test dataset: $testset"
-  docker exec -it "$docker_name" sh -c "/tests/start_decode.sh $trainset $testset $recipe $epoch $size"
-done
+# 检查trainset变量值是否在可选列表中
+if ! [[ " ${datasets[@]} " =~ " $trainset " ]]; then
+    echo "Error: Invalid trainset value '$trainset'. Allowed values are: ${datasets[*]}"
+    exit 1
+fi
 
-# 获取WER
-file="$root_dir/wer_summary.csv"
+# 清除wer_summary.csv
+file="$file_dir/wer_summary.csv"
 if [ -f "$file" ]; then
     rm -f "$file"
 fi
 
+if [ ! -d "$file_dir/models" ]; then
+    mkdir -p "$file_dir/models"
+fi
+# 下载模型
+bash "$file_dir/download_model.sh" "$model_dir_path" "$file_dir/models"
+
+# 将model软链接到所有测试数据集目录下, 软链接成功后执行测试
 for dataset in "${datasets[@]}"; do
-  docker exec -it "$docker_name" sh -c "cd /tests && python3 /tests/wer_summary.py $dataset"
+  if docker exec -it "$docker_name" sh -c "/tests/ln_model.sh $dataset $model_name $epoch $recipe"; then
+    echo "Decoding test dataset: $dataset"
+    if ! docker exec -it "$docker_name" sh -c "/tests/start_decode.sh $trainset $dataset $recipe $epoch $avg $size"; then
+      echo "Decoding test dataset: $dataset failed. Aborting."
+      exit 1
+    fi
+    # 获取WER
+    docker exec -it "$docker_name" sh -c "cd /tests && python3 /tests/wer_summary.py $dataset"
+  fi
 done
 
 if [ -f "$file" ]; then

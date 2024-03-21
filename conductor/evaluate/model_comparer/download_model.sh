@@ -7,6 +7,7 @@ fi
 
 model_dir_path=$1
 target_dir=$2
+model_dir_path=${model_dir_path%/}
 
 if [ ! -d "$target_dir/$(basename $model_dir_path)" ]; then
   rsync -av "$model_dir_path" "$target_dir"

@@ -5,6 +5,7 @@ import os
 import threading
 
 from conductor.utils import log_dir
+from dingtalkchatbot.chatbot import DingtalkChatbot
 
 
 class TopLogST:
@@ -47,6 +48,16 @@ def get_logger(name):
     return TopLogST().get_logger(name)
 
 
+def notify_dingding(msg):
+    dingding_robot_token = os.getenv("DINGDING_ROBOT_TOKEN")
+    if not dingding_robot_token:
+        raise Exception("Dingding robot token not found")
+    webhook = f"https://oapi.dingtalk.com/robot/send?access_token={dingding_robot_token}"
+    dc = DingtalkChatbot(webhook)
+    final_msg = msg
+    print(dc.send_text(msg=final_msg))
+
+
 if __name__ == '__main__':
     logger = get_logger('test')
-    logger.info('test')
+    logger.warning('test')
