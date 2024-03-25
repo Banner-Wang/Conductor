@@ -1,9 +1,9 @@
 import os
 import sys
 import argparse
-sys.path.append(".")
-sys.path.append("..")
-sys.path.append("../..")
+
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+sys.path.append(base_dir)
 from conductor.utils import get_sorted_epochs, copy_file, get_logger
 
 log = get_logger(os.path.basename(__file__))
