@@ -1,19 +1,36 @@
 import os
 import argparse
+import subprocess
+import re
+
+
+def get_interface_ip():
+    try:
+        result = subprocess.run(['ip', 'addr', 'show'], capture_output=True, text=True)
+        output = result.stdout
+
+        ipv4_pattern = r'inet\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/\d+\s+.*global(?! docker).*\s+(\w+)$'
+        matches = re.findall(ipv4_pattern, output, re.MULTILINE)
+
+        for match in matches:
+            ip_address, interface = match
+            return ip_address
+    except Exception as e:
+        print("Error:", e)
+        return {}
 
 
 def update_env_file(env_file, **kwargs):
-    # 读取现有的 env_file 文件
-    with open(env_file, 'r') as f:
-        lines = f.readlines()
-
-    # 创建一个字典来存储键值对
     env_dict = {}
-    for line in lines:
-        line = line.strip()
-        if line and not line.startswith('#'):
-            key, value = line.split('=', 1)
-            env_dict[key.upper()] = value
+    if os.path.exists(env_file):
+        with open(env_file, 'r') as f:
+            lines = f.readlines()
+
+        for line in lines:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                key, value = line.split('=', 1)
+                env_dict[key.upper()] = value
 
     # 更新字典中的值
     for key, value in kwargs.items():
@@ -27,7 +44,8 @@ def update_env_file(env_file, **kwargs):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Update env_file file')
-    parser.add_argument('--env_file', default='env_file', help='Path to env_file file')
+    parser.add_argument('--env_file', default='./env_file', help='Path to env_file file')
+    parser.add_argument('--host_ip', default=get_interface_ip(), help='host IP address')
     parser.add_argument('--dataset', help='Value for DATASET')
     parser.add_argument('--train_cmd', help='Value for TRAIN_CMD')
     parser.add_argument('--log_file', help='Value for LOG_FILE')
