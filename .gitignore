@@ -17,4 +17,4 @@ __pycache__/
 .idea/
 
 .csv
-/docker/env_file
+/docker/.env

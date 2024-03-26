@@ -4,13 +4,14 @@ services:
     build: .
     working_dir: /workspace/Conductor/docker
     env_file:
-      - ./env_file
+      - .env
     volumes:
       - /data:/data
+      - /${DATASET_SRC}:/${DATASET_SRC}
       - ./..:/workspace/Conductor
       - ../conductor/monitor/health_check.py:/workspace/Conductor/docker/health_check.py
       - ../conductor/monitor/train.sh:/workspace/Conductor/docker/train.sh
-    command: bash -c "bash train.sh '${ICEFALL_PATH}' '${DATASET}' '${TRAIN_CMD}' '${LOG_FILE}' > '${LOG_FILE}' 2>&1"
+    command: bash -c "bash train.sh '${ICEFALL_PATH}' '${DATASET_NAME}' '${TRAIN_CMD}' '${DATASET_SRC}' > '${LOG_FILE}' 2>&1"
     deploy:
       resources:
         reservations:
@@ -24,7 +25,7 @@ services:
         max_attempts: 5
         window: 120s
     healthcheck:
-      test: ["CMD", "python", "health_check.py", "${DINGDING_TOKEN}", "${HOST_IP}", '${DATASET}', '${TRAIN_CMD}', ]
+      test: ["CMD", "python", "health_check.py", "${DINGDING_TOKEN}", "${HOST_IP}", '${DATASET_NAME}', '${TRAIN_CMD}', ]
       interval: 60s
       timeout: 5s
       retries: 1

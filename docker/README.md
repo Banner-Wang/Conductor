@@ -14,7 +14,7 @@
 
 4. **health_check.py 脚本**:用于定期检查训练进度,并通过钉钉机器人进行通知。
 
-5. **setup.py 脚本**:用于更新 ` env_file` 文件中的环境变量。
+5. **setup.py 脚本**:用于更新 ` .env` 文件中的环境变量。
 
 ## 快速开始
 
@@ -62,9 +62,9 @@ docker compose -p <YOUR_DOCKER_NAME> up -d
 
 3. 准备好训练数据集,并将其放置在 `/data/AI_VOICE_WORKSPACE/asr/prepared_data/` 目录下。
 
-4. 修改 `env_file` 文件,设置必要的环境变量,如 `DATASET`、`TRAIN_CMD`、`LOG_FILE`、`DINGDING_TOKEN` 和 `ICEFALL_PATH` 等。
+4. 修改 `.env` 文件,设置必要的环境变量,如 `DATASET_NAME`、`DATASET_SRC`、`TRAIN_CMD`、`LOG_FILE`、`DINGDING_TOKEN` 和 `ICEFALL_PATH` 等。
 
-5. 运行 `docker-compose up -d` 命令启动服务。
+5. 运行 `docker compose up -d` 命令启动服务。
 
 6. 通过 `docker logs` 命令查看日志,确认训练过程正常进行。
 
@@ -78,7 +78,7 @@ docker compose -p <YOUR_DOCKER_NAME> up -d
 - `shm_size` 设置共享内存大小。
 - `build` 指定使用当前目录下的 Dockerfile 构建镜像。
 - `working_dir` 设置容器中的工作目录。
-- `env_file` 从 ` env_file` 文件加载环境变量。
+- `.env` 从 ` .env` 文件加载环境变量。
 - `volumes` 映射主机目录到容器内。
 - `command` 定义容器启动后执行的命令。
 - `deploy` 定义服务部署相关配置,如 GPU 资源预留和重启策略。
@@ -99,4 +99,4 @@ docker compose -p <YOUR_DOCKER_NAME> up -d
 
 ### setup.py 脚本
 
-该脚本用于更新 ` env_file` 文件中的环境变量。
+该脚本用于更新 ` .env` 文件中的环境变量。
