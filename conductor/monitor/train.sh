@@ -11,13 +11,14 @@ if [ ! -d "${icefall_path}" ]; then
   exit 1
 fi
 
+
 if [ ! -L "/workspace/icefall" ]; then
-    rm -f /workspace/icefall
+    current_time=$(date +%Y%m%d%H%M%S)
+    mv -f /workspace/icefall /workspace/icefall_$current_time
     ln -svf $icefall_path /workspace/icefall
 else
-    echo "The specified path is not a symbolic link."
+    echo "icefall has been linked."
 fi
-
 
 cd /workspace/icefall/egs/$dataset/ASR
 

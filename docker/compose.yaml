@@ -1,0 +1,31 @@
+services:
+  icefall:
+    shm_size: 1gb
+    build: .
+    working_dir: /workspace/Conductor/docker
+    env_file:
+      - ./env_file
+    volumes:
+      - /data:/data
+      - ./..:/workspace/Conductor
+      - ../conductor/monitor/health_check.py:/workspace/Conductor/docker/health_check.py
+      - ../conductor/monitor/train.sh:/workspace/Conductor/docker/train.sh
+    command: bash -c "bash train.sh '${ICEFALL_PATH}' '${DATASET}' '${TRAIN_CMD}' '${LOG_FILE}' > '${LOG_FILE}' 2>&1"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 120s
+    healthcheck:
+      test: ["CMD", "python", "health_check.py", "${DINGDING_TOKEN}", '${DATASET}', '${TRAIN_CMD}', ]
+      interval: 600s
+      timeout: 5s
+      retries: 1
+      start_period: 20s  # 容器启动后 20 秒开始健康检查

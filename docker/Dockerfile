@@ -11,10 +11,5 @@ RUN apt-get update && apt-get install -y \
 RUN pip install \
     pypinyin \
     speechcolab \
-    pandas
-
-# # 复制并运行脚本 AAA
-# COPY train.sh /workspace/icefall
-# COPY health_check.py /workspace/icefall
-# RUN chmod +x AAA
-# CMD ["./AAA"]
+    pandas \
+    dingtalkchatbot
