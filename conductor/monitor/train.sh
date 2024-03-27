@@ -5,6 +5,7 @@ dataset_name="${DATASET_NAME}"
 dataset_src="${DATASET_SRC}"
 dingding_token="${DINGDING_TOKEN}"
 host_ip="${HOST_IP}"
+training_dir="${TRAINING_DIR}"
 
 message="容器启动/重启通知"
 python3 health_check.py $dingding_token $host_ip $dataset_name "${cmd}" --message $message
@@ -68,4 +69,4 @@ cmd=$(echo "$cmd" | sed "s/--start-epoch [0-9]*/--start-epoch $((max_epoch + 1))
 
 eval "$cmd"
 cd /workspace/Conductor/docker
-python3 health_check.py $dingding_token $host_ip $dataset_name "${cmd}"
+python3 health_check.py $dingding_token $host_ip $dataset_name "${cmd}" $dataset_src --training_dir $training_dir

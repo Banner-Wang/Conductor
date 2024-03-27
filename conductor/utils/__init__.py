@@ -6,6 +6,7 @@ from .basics import (
 from .toolkit import (
     get_sorted_epochs,
     copy_file,
+    sync_epochs,
 )
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     "copy_file",
     "get_logger",
     "notify_dingding",
+    "sync_epochs",
 ]

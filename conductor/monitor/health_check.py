@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(base_dir)
-from conductor.utils import notify_dingding, get_sorted_epochs, get_logger
+from conductor.utils import notify_dingding, get_logger, sync_epochs
 
 log = get_logger(os.path.basename(__file__))
 
@@ -17,6 +17,7 @@ def get_args():
     parser.add_argument("hostip", type=str, help="host IP address.")
     parser.add_argument("dataset_name", type=str, help="dataset name.")
     parser.add_argument("train_cmd", type=str, help="train command")
+    parser.add_argument("--training_dir", type=str, default=None, help="epoch path to decode")
     parser.add_argument("--message", type=str, default=None, help="Dingding message.")
     return parser.parse_args()
 
@@ -51,47 +52,65 @@ def save_max_epoch(max_epoch, file_path):
         log.error(f"Error occurred while saving max_epoch: {e}")
 
 
-def health_check(token, hostip, dataset_name, train_cmd, message):
-    if message is None:
-        exp_dir_pattern = r"--exp-dir\s+(\S+)"
-        match = re.search(exp_dir_pattern, train_cmd)
-        file_path = "./max_epoch.txt"
-        if match:
-            exp_dir = match.group(1)
-            epoch_dir = f"/workspace/icefall/egs/{dataset_name}/ASR/{exp_dir}"
-            max_epoch = get_sorted_epochs(epoch_dir, 1)
-            flag = save_max_epoch(max_epoch, file_path)
-            if flag == 0:
-                log.debug(f"exist epoch:{max_epoch}, max epoch:{max_epoch}, file:{file_path}")
-                return
-            elif flag == -1:
-                message = f"ERROR: exist epoch:{max_epoch}, max epoch:{max_epoch}"
-                alert_level = "警告"
-            elif flag == 1:
-                message = f"最新的epoch：{max_epoch}"
-                alert_level = "通知"
-            else:
-                return
-        else:
-            message = f"ERROR: --exp-dir not found in the command string."
-            alert_level = "警告"
-    else:
-        alert_level = "通知"
+# 告警函数
+def alert_dingding(token, hostip, dataset_name, alert_level, message):
     alert_title = "训练进度通知"
     alert_time = bj_time()
     alert_application = f"{dataset_name} train"
     formatted_alert = f"""
-    告警标题：{alert_title}
-    告警时间：{alert_time}
-    告警级别：{alert_level}
-    告警应用：{alert_application}
-    告警内容：{message}
-    主机：{hostip}
-    """
+        告警标题：{alert_title}
+        告警时间：{alert_time}
+        告警级别：{alert_level}
+        告警应用：{alert_application}
+        告警内容：{message}
+        主机：{hostip}
+        """
     log.debug(formatted_alert)
     notify_dingding(token, formatted_alert)
 
 
+def health_check(token, hostip, dataset_name, train_cmd, **kwargs):
+    training_dir = kwargs.get("training_dir")
+    message = kwargs.get("message")
+
+    if message is not None:
+        alert_level = "通知"
+        alert_dingding(token, hostip, dataset_name, alert_level, message)
+        exit(0)
+
+    exp_dir_pattern = r"--exp-dir\s+(\S+)"
+    match = re.search(exp_dir_pattern, train_cmd)
+    if not match:
+        message = f"ERROR: --exp-dir not found in the command string."
+        alert_level = "严重告警"
+        alert_dingding(token, hostip, dataset_name, alert_level, message)
+        exit(1)
+
+    epoch_dir = f"/workspace/icefall/egs/{dataset_name}/ASR/{match.group(1)}"
+    try:
+        src_epoch, dest_epoch = sync_epochs(epoch_dir, training_dir, 1)
+        log.info(f"Sync completed. src_epoch: {src_epoch}, dest_epoch: {dest_epoch}")
+    except Exception as e:
+        message = f"An error occurred: {e}"
+        alert_level = "普通告警"
+        alert_dingding(token, hostip, dataset_name, alert_level, message)
+        exit(0)
+    else:
+        if src_epoch > dest_epoch:
+            message = f"最新的epoch：{src_epoch}"
+            alert_level = "通知"
+            alert_dingding(token, hostip, dataset_name, alert_level, message)
+        elif src_epoch == dest_epoch:
+            log.info(f"src epoch:{src_epoch}, dest epoch:{dest_epoch}")
+            exit(0)
+        else:
+            message = f"ERROR: src epoch:{src_epoch}, dest epoch:{dest_epoch}"
+            alert_level = "严重告警"
+            alert_dingding(token, hostip, dataset_name, alert_level, message)
+            exit(1)
+
+
 if __name__ == "__main__":
     args = get_args()
-    health_check(args.dingding_token, args.hostip, args.dataset_name, args.train_cmd, args.message)
+    health_check(args.dingding_token, args.hostip, args.dataset_name, args.train_cmd,
+                 training_dir=args.training_dir, message=args.message)

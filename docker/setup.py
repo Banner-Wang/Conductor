@@ -3,6 +3,7 @@ import argparse
 import subprocess
 import re
 import sys
+from datetime import datetime
 
 
 def check_docker_compose():
@@ -81,14 +82,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Update .env file')
     parser.add_argument('--env_file', default='./.env', help='Path to .env file')
     parser.add_argument('--host_ip', default=get_interface_ip(), help='host IP address')
-    parser.add_argument('--dataset_src', default='data', help='Value for DATASET SRC')
+    parser.add_argument('--dataset_src', default='nfsmnt', help='Value for DATASET SRC')
     parser.add_argument('--log_file', default='/workspace/Conductor/docker/train.log', help='Value for LOG_FILE')
+    parser.add_argument('--training_dir', default=None, help='training directory, S3 or NFS')
     parser.add_argument('--dataset_name', help='Value for DATASET')
     parser.add_argument('--train_cmd', help='Value for TRAIN_CMD')
     parser.add_argument('--dingding_token', help='Value for DINGDING_TOKEN')
     parser.add_argument('--icefall_path', help='Value for ICEFALL_PATH')
 
     args = parser.parse_args()
-
+    if args.training_dir is None:
+        cdate = datetime.now().strftime("%Y%m%d%H")
+        args.training_dir = f"/{args.dataset_src}/AI_VOICE_WORKSPACE/asr/training_model/{args.dataset_name}_{args.hostip}_{cdate}"
     kwargs = {k.upper(): v for k, v in vars(args).items() if v is not None and k != 'env_file'}
     update_env_file(args.env_file, **kwargs)
