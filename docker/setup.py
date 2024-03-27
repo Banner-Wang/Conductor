@@ -2,6 +2,37 @@ import os
 import argparse
 import subprocess
 import re
+import sys
+
+
+def check_docker_compose():
+    try:
+        # 检查 Docker 是否安装
+        result = subprocess.run(['docker', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode != 0:
+            print("Docker is not installed on this system. Please install Docker first.")
+            return False
+
+        # 检查 Docker Compose 是否安装
+        result = subprocess.run(['docker', 'compose', 'version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode != 0:
+            print("Docker Compose is not installed on this system. Please install Docker Compose first.")
+            return False
+
+        # 检查 Docker Compose 版本号是否满足要求
+        output = result.stdout.decode('utf-8').strip()
+        version_str = output.split(',')[0].split()[-1].lstrip('v')  # 提取版本号字符串
+        version_parts = version_str.split('.')
+        major, minor, patch = [int(part) for part in version_parts]
+        if major < 2 or (major == 2 and minor < 25):
+            print(f"Your Docker Compose version ({version_str}) is too old. Please upgrade to version 2.25.0 or later.")
+            return False
+
+    except Exception as e:
+        print(f"Error checking Docker and Docker Compose: {e}")
+        return False
+
+    return True
 
 
 def get_interface_ip():
@@ -43,6 +74,10 @@ def update_env_file(env_file, **kwargs):
 
 
 if __name__ == "__main__":
+    # 检查 Docker 和 Docker Compose 的安装情况以及版本号
+    if not check_docker_compose():
+        sys.exit(1)
+
     parser = argparse.ArgumentParser(description='Update .env file')
     parser.add_argument('--env_file', default='./.env', help='Path to .env file')
     parser.add_argument('--host_ip', default=get_interface_ip(), help='host IP address')
