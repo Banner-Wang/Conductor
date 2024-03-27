@@ -27,6 +27,6 @@ services:
     healthcheck:
       test: ["CMD", "python", "health_check.py", "${DINGDING_TOKEN}", "${HOST_IP}", '${DATASET_NAME}', '${TRAIN_CMD}', '--training_dir', '${TRAINING_DIR}', ]
       interval: 60s
-      timeout: 5s
-      retries: 1
-      start_period: 20s  # 容器启动后 20 秒开始健康检查
+      timeout: 60s
+      retries: 3
+      start_period: 60s  # 容器启动后 20 秒开始健康检查

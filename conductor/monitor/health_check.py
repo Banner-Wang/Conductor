@@ -57,14 +57,20 @@ def alert_dingding(token, hostip, dataset_name, alert_level, message):
     alert_title = "训练进度通知"
     alert_time = bj_time()
     alert_application = f"{dataset_name} train"
-    formatted_alert = f"""
-        告警标题：{alert_title}
-        告警时间：{alert_time}
-        告警级别：{alert_level}
-        告警应用：{alert_application}
-        告警内容：{message}
-        主机：{hostip}
-        """
+    formatted_alert = """
+    ╔═══════════════════════════════════════════════╗
+    ║                 {alert_title}                   ║
+    ╠═══════════════════════════════════════════════╣
+    ║ 告警时间: {alert_time}
+    ║ 告警级别: {alert_level}
+    ║ 告警应用: {alert_application}
+    ║ 主机: {hostip}
+    ║
+    ║ 告警内容:
+    ║ {message}
+    ╚═══════════════════════════════════════════════╝
+    """.format(alert_title=alert_title, alert_time=alert_time, alert_level=alert_level,
+               alert_application=alert_application, message=message, hostip=hostip)
     log.debug(formatted_alert)
     notify_dingding(token, formatted_alert)
 

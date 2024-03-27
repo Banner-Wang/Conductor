@@ -92,7 +92,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if args.training_dir is None:
-        cdate = datetime.now().strftime("%Y%m%d%H")
-        args.training_dir = f"/{args.dataset_src}/AI_VOICE_WORKSPACE/asr/training_model/{args.dataset_name}_{args.hostip}_{cdate}"
+        cdate = datetime.now().strftime("%Y%m%d%H%M%S")
+        args.training_dir = f"/{args.dataset_src}/AI_VOICE_WORKSPACE/asr/training_model/{args.dataset_name}_{args.host_ip}_{cdate}"
+
+    if not os.path.exists(args.training_dir):
+        os.makedirs(args.training_dir)
+
     kwargs = {k.upper(): v for k, v in vars(args).items() if v is not None and k != 'env_file'}
     update_env_file(args.env_file, **kwargs)

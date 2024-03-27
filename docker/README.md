@@ -21,13 +21,14 @@
 1. 下载 GitHub 项目到您的工作目录 `YOUR_WORK_DIR`:
 
 ```bash
-git clone https://github.com/Banner-Wang/Conductor.git <YOUR_WORK_DIR>
+cd <YOUR_WORK_DIR>
+git clone https://github.com/Banner-Wang/Conductor.git
 ```
 
 2. 进入 `Conductor/docker` 目录:
 
 ```bash
-cd <YOUR_WORK_DIR>/Conductor/docker
+cd Conductor/docker
 ```
 
 3. 根据说明执行 `setup.py` 来配置环境变量:
@@ -39,7 +40,8 @@ python3 setup.py \
     --train_cmd "<YOUR_TRAIN_CMD>" \
     --log_file <YOUR_LOG_FILE> \
     --dingding_token <YOUR_DINGDING_TOKEN> \
-    --icefall_path <YOUR_ICEFALL_PATH>
+    --icefall_path <YOUR_ICEFALL_PATH> \
+    --training_dir <YOUR_TRAIN_DIR> 
 ```
 
 替换上面命令中的占位符为您实际的值:
@@ -50,6 +52,7 @@ python3 setup.py \
 - `YOUR_LOG_FILE`: 训练日志文件路径, 默认`/workspace/Conductor/docker/train.log`
 - `YOUR_DINGDING_TOKEN`: 钉钉机器人的 Token
 - `YOUR_ICEFALL_PATH`: icefall 代码的本地路径
+- `YOUR_TRAIN_PATH`: epoch远程存放路径
 
 简单示例：
 ```bash
