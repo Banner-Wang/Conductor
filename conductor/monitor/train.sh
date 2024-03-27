@@ -3,10 +3,13 @@ icefall_path="${ICEFALL_PATH}"
 cmd="${TRAIN_CMD}"
 dataset_name="${DATASET_NAME}"
 dataset_src="${DATASET_SRC}"
-#log_file="${LOG_FILE}"
+dingding_token="${DINGDING_TOKEN}"
+host_ip="${HOST_IP}"
+
+message="容器启动/重启通知"
+python3 health_check.py $dingding_token $host_ip $dataset_name "${cmd}" --message $message
 
 cd /workspace
-
 if [ ! -d "${icefall_path}" ]; then
   echo "ICEFALL_PATH not set"
   exit 1
@@ -64,3 +67,5 @@ cmd=$(echo "$cmd" | sed "s/--start-epoch [0-9]*/--start-epoch $((max_epoch + 1))
 #fi
 
 eval "$cmd"
+cd /workspace/Conductor/docker
+python3 health_check.py $dingding_token $host_ip $dataset_name "${cmd}"

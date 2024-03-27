@@ -15,8 +15,9 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("dingding_token", type=str, help="Dingding robot token.")
     parser.add_argument("hostip", type=str, help="host IP address.")
-    parser.add_argument("dataset", type=str, help="Dingding robot token.")
-    parser.add_argument("train_cmd", type=str, help="Dingding robot token.")
+    parser.add_argument("dataset_name", type=str, help="dataset name.")
+    parser.add_argument("train_cmd", type=str, help="train command")
+    parser.add_argument("--message", type=str, default=None, help="Dingding message.")
     return parser.parse_args()
 
 
@@ -50,35 +51,35 @@ def save_max_epoch(max_epoch, file_path):
         log.error(f"Error occurred while saving max_epoch: {e}")
 
 
-def health_check(token, hostip, dataset, train_cmd):
-    exp_dir_pattern = r"--exp-dir\s+(\S+)"
-    match = re.search(exp_dir_pattern, train_cmd)
-    file_path = "./max_epoch.txt"
-    if match:
-        exp_dir = match.group(1)
-        epoch_dir = f"/workspace/icefall/egs/{dataset}/ASR/{exp_dir}"
-        max_epoch = get_sorted_epochs(epoch_dir, 1)
-        flag = save_max_epoch(max_epoch, file_path)
-        if flag == 0:
-            log.debug(f"exist epoch:{max_epoch}, max epoch:{max_epoch}, file:{file_path}")
-            return
-        elif flag == -1:
-            message = f"ERROR: exist epoch:{max_epoch}, max epoch:{max_epoch}"
-            alert_title = "训练进度通知"
-            alert_level = "警告"
-        elif flag == 1:
-            message = f"最新的epoch：{max_epoch}"
-            alert_title = "训练进度通知"
-            alert_level = "通知"
+def health_check(token, hostip, dataset_name, train_cmd, message):
+    if message is None:
+        exp_dir_pattern = r"--exp-dir\s+(\S+)"
+        match = re.search(exp_dir_pattern, train_cmd)
+        file_path = "./max_epoch.txt"
+        if match:
+            exp_dir = match.group(1)
+            epoch_dir = f"/workspace/icefall/egs/{dataset_name}/ASR/{exp_dir}"
+            max_epoch = get_sorted_epochs(epoch_dir, 1)
+            flag = save_max_epoch(max_epoch, file_path)
+            if flag == 0:
+                log.debug(f"exist epoch:{max_epoch}, max epoch:{max_epoch}, file:{file_path}")
+                return
+            elif flag == -1:
+                message = f"ERROR: exist epoch:{max_epoch}, max epoch:{max_epoch}"
+                alert_level = "警告"
+            elif flag == 1:
+                message = f"最新的epoch：{max_epoch}"
+                alert_level = "通知"
+            else:
+                return
         else:
-            return
+            message = f"ERROR: --exp-dir not found in the command string."
+            alert_level = "警告"
     else:
-        message = f"ERROR: --exp-dir not found in the command string."
-        alert_title = "训练进度通知"
-        alert_level = "警告"
-
+        alert_level = "通知"
+    alert_title = "训练进度通知"
     alert_time = bj_time()
-    alert_application = f"{dataset} train"
+    alert_application = f"{dataset_name} train"
     formatted_alert = f"""
     告警标题：{alert_title}
     告警时间：{alert_time}
@@ -93,4 +94,4 @@ def health_check(token, hostip, dataset, train_cmd):
 
 if __name__ == "__main__":
     args = get_args()
-    health_check(args.dingding_token, args.hostip, args.dataset, args.train_cmd)
+    health_check(args.dingding_token, args.hostip, args.dataset_name, args.train_cmd, args.message)

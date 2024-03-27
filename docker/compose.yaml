@@ -11,7 +11,7 @@ services:
       - ./..:/workspace/Conductor
       - ../conductor/monitor/health_check.py:/workspace/Conductor/docker/health_check.py
       - ../conductor/monitor/train.sh:/workspace/Conductor/docker/train.sh
-    command: bash -c "bash train.sh '${ICEFALL_PATH}' '${DATASET_NAME}' '${TRAIN_CMD}' '${DATASET_SRC}' > '${LOG_FILE}' 2>&1"
+    command: bash -c "bash train.sh '${ICEFALL_PATH}' '${DATASET_NAME}' '${TRAIN_CMD}' '${DATASET_SRC}' '${DINGDING_TOKEN}' '${HOST_IP}' > '${LOG_FILE}' 2>&1"
     deploy:
       resources:
         reservations:
