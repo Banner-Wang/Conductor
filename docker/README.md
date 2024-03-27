@@ -51,11 +51,10 @@ python3 setup.py \
 - `YOUR_DINGDING_TOKEN`: 钉钉机器人的 Token
 - `YOUR_ICEFALL_PATH`: icefall 代码的本地路径
 
-参考示例：
+简单示例：
 ```bash
 python3 setup.py \
     --dataset_name librispeech \
-    --dataset_src nfsmnt \
     --train_cmd "python3 ./zipformer/train.py \
         --world-size 1 \
         --num-epochs 50 \
@@ -66,7 +65,6 @@ python3 setup.py \
         --full-libri 1 \
         --base-lr 0.030 \
         --max-duration 500" \
-    --log_file /workspace/Conductor/docker/train.log \
     --dingding_token xxxxxxxxxxxxxxxxxxxxxxx \
     --icefall_path "/data/AI_VOICE_WORKSPACE/asr/tests/icefall"
 
