@@ -46,10 +46,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Update .env file')
     parser.add_argument('--env_file', default='./.env', help='Path to .env file')
     parser.add_argument('--host_ip', default=get_interface_ip(), help='host IP address')
-    parser.add_argument('--dataset_src', default="data", help='Value for DATASET SRC')
+    parser.add_argument('--dataset_src', default='data', help='Value for DATASET SRC')
+    parser.add_argument('--log_file', default='/workspace/Conductor/docker/train.log', help='Value for LOG_FILE')
     parser.add_argument('--dataset_name', help='Value for DATASET')
     parser.add_argument('--train_cmd', help='Value for TRAIN_CMD')
-    parser.add_argument('--log_file', help='Value for LOG_FILE')
     parser.add_argument('--dingding_token', help='Value for DINGDING_TOKEN')
     parser.add_argument('--icefall_path', help='Value for ICEFALL_PATH')
 

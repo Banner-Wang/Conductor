@@ -33,17 +33,44 @@ cd <YOUR_WORK_DIR>/Conductor/docker
 3. 根据说明执行 `setup.py` 来配置环境变量:
 
 ```bash
-python3 setup.py --dataset <YOUR_DATASET> --train_cmd "<YOUR_TRAIN_CMD>" --log_file <YOUR_LOG_FILE> --dingding_token <YOUR_DINGDING_TOKEN> --icefall_path <YOUR_ICEFALL_PATH>
+python3 setup.py \
+    --dataset_name <YOUR_DATASET_NAME> \
+    --dataset_src <YOUR_DATASET_SRC> \
+    --train_cmd "<YOUR_TRAIN_CMD>" \
+    --log_file <YOUR_LOG_FILE> \
+    --dingding_token <YOUR_DINGDING_TOKEN> \
+    --icefall_path <YOUR_ICEFALL_PATH>
 ```
 
 替换上面命令中的占位符为您实际的值:
 
-- `YOUR_DATASET`: 您要使用的数据集名称
+- `YOUR_DATASET_NAME`: 您要使用的数据集名称
+- `YOUR_DATASET_SRC`: 您要使用的数据集所在的根目录，默认`/data`
 - `YOUR_TRAIN_CMD`: 训练命令,如 `python3 train.py ...`
-- `YOUR_LOG_FILE`: 训练日志文件路径
+- `YOUR_LOG_FILE`: 训练日志文件路径, 默认`/workspace/Conductor/docker/train.log`
 - `YOUR_DINGDING_TOKEN`: 钉钉机器人的 Token
 - `YOUR_ICEFALL_PATH`: icefall 代码的本地路径
 
+参考示例：
+```bash
+python3 setup.py \
+    --dataset_name librispeech \
+    --dataset_src nfsmnt \
+    --train_cmd "python3 ./zipformer/train.py \
+        --world-size 1 \
+        --num-epochs 50 \
+        --start-epoch 1 \
+        --use-fp16 1 \
+        --exp-dir zipformer/exp \
+        --causal 0 \
+        --full-libri 1 \
+        --base-lr 0.030 \
+        --max-duration 500" \
+    --log_file /workspace/Conductor/docker/train.log \
+    --dingding_token xxxxxxxxxxxxxxxxxxxxxxx \
+    --icefall_path "/data/AI_VOICE_WORKSPACE/asr/tests/icefall"
+
+```
 4. 启动 Docker 容器:
 
 ```bash
@@ -52,7 +79,7 @@ docker compose -p <YOUR_DOCKER_NAME> up -d
 
 这将使用 `YOUR_DOCKER_NAME` 作为容器前缀名称启动服务。您可以通过 `tail -f <YOUR_LOG_FILE>` 命令查看日志,确认训练过程正常进行。
 
-现在,您已经成功配置并启动了 icefall 训练环境。训练完成后,模型文件将保存在 `icefall/egs/${YOUR_DATASET}/ASR/` 目录下。
+现在,您已经成功配置并启动了 icefall 训练环境。训练完成后,模型文件将保存在 `icefall/egs/${YOUR_DATASET_NAME}/ASR/` 目录下。
 
 ## 使用方法
 
