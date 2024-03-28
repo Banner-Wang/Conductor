@@ -4,8 +4,6 @@ import logging
 import os
 import threading
 
-from dingtalkchatbot.chatbot import DingtalkChatbot
-
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 log_dir = os.path.join(root_dir, 'log')
 
@@ -53,15 +51,6 @@ class TopLogST:
 
 def get_logger(name):
     return TopLogST().get_logger(name)
-
-
-def notify_dingding(dingding_robot_token, msg):
-    if not dingding_robot_token:
-        raise Exception("Dingding robot token not found")
-    webhook = f"https://oapi.dingtalk.com/robot/send?access_token={dingding_robot_token}"
-    dc = DingtalkChatbot(webhook)
-    final_msg = msg
-    print(dc.send_text(msg=final_msg))
 
 
 if __name__ == '__main__':

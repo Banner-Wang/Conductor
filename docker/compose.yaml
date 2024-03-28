@@ -33,10 +33,4 @@ services:
 
   within_decode:
     <<: *base-service
-    command: bash -c "bash /workspace/Conductor/conductor/within_dataset_decode/decode.sh"
-    healthcheck:
-      test: ["CMD", "python", "/workspace/Conductor/conductor/within_dataset_decode/health_check.py"]
-      interval: 60s
-      timeout: 60s
-      retries: 3
-      start_period: 60s
+    command: bash -c "bash /workspace/Conductor/conductor/decode/within_dataset_decode/decode.sh"

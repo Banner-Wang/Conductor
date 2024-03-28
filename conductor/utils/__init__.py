@@ -1,12 +1,12 @@
 from .basics import (
     get_logger,
-    notify_dingding,
 )
 
 from .toolkit import (
     get_sorted_epochs,
     copy_file,
     sync_epochs,
+    notify_dingding,
 )
 
 __all__ = [
