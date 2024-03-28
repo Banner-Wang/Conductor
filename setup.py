@@ -4,8 +4,6 @@ import subprocess
 import re
 import sys
 from datetime import datetime
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(base_dir)
 from conductor.utils import get_logger
 
 log = get_logger(os.path.basename(__file__))
@@ -31,7 +29,8 @@ def check_docker_compose():
         version_parts = version_str.split('.')
         major, minor, patch = [int(part) for part in version_parts]
         if major < 2 or (major == 2 and minor < 25):
-            log.error(f"Your Docker Compose version ({version_str}) is too old. Please upgrade to version 2.25.0 or later.")
+            log.error(f"Your Docker Compose version ({version_str}) is too old. "
+                      f"Please upgrade to version 2.25.0 or later.")
             return False
 
     except Exception as e:
@@ -121,7 +120,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     parser = argparse.ArgumentParser(description='Update .env file')
-    parser.add_argument('--env_file', default='./.env', help='Path to .env file')
+    parser.add_argument('--env_file', default='./docker/.env', help='Path to .env file')
     parser.add_argument('--commonvoice_data', type=str,
                         default='/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/commonvoice/cv_en_161/data',
                         help='common voice data')
