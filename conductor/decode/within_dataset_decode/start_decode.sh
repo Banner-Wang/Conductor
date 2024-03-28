@@ -1,16 +1,17 @@
 #!/bin/bash
 
 if [ $# -ne 6 ]; then
-  echo "Usage: $0 <trainset> <testset> <recipe> <epoch> <avg> <size> "
+  echo "Usage: $0 <trainset> <testset> <epoch_dir> <recipe> <epoch> <avg> <size> "
   exit 1
 fi
 
 trainset=$1
 testset=$2
-recipe=$3
-epoch=$4
-avg=$5
-size=$6
+epoch_dir=$3
+recipe=$4
+epoch=$5
+avg=$6
+size=$7
 
 case $trainset in
   commonvoice)
@@ -44,6 +45,7 @@ ls -l data
 ls -l ./$recipe/exp/epoch-$epoch.pt
 echo "--bpe-model: $bpe_model"
 echo "--lang-dir: $lang_dir"
+echo "--exp-dir: $epoch_dir"
 echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
 #if [ -d "./$recipe/exp/greedy_search" ]; then
@@ -53,7 +55,7 @@ echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
 if [ "$size" == "medium" ]; then
   python3 ./$recipe/decode.py \
-    --exp-dir ./$recipe/exp \
+    --exp-dir $epoch_dir \
     --epoch $epoch \
     --avg $avg \
     --bpe-model $bpe_model \
@@ -63,7 +65,7 @@ if [ "$size" == "medium" ]; then
     --decoding-method greedy_search
 elif [ "$size" == "large" ]; then
   python3 ./$recipe/decode.py \
-    --exp-dir ./$recipe/exp \
+    --exp-dir $epoch_dir \
     --epoch $epoch \
     --avg $avg \
     --bpe-model $bpe_model \

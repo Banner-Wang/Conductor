@@ -1,27 +1,41 @@
 #!/bin/bash
 
+icefall_path=$ICEFALL_PATH
+train_cmd="${TRAIN_CMD}"
 epoch_dir=$TRAINING_DIR
-train_cmd=$TRAIN_CMD
 dataset=$DATASET_NAME
 model_size=$MODEL_SIZE
 start_epoch=1
 
+# 进入工作目录
+cd /workspace || exit
+
+# 检查 ICEFALL_PATH 是否设置
+if [ -z "$icefall_path" ]; then
+    echo "ICEFALL_PATH not set"
+    exit 1
+fi
+
+# 链接 icefall 目录
+if [ ! -L "icefall" ]; then
+    current_time=$(date +%Y%m%d%H%M%S)
+    mv -f icefall icefall_$current_time
+    ln -svf "$icefall_path" icefall
+else
+    echo "icefall has been linked."
+fi
+
 cd /workspace/icefall/egs/"$dataset"/ASR || exit
-num_epochs=$(echo "$cmd" | grep -o -- '--num-epochs [^ ]*' | cut -d ' ' -f2)
-exp_dir=$(echo "$cmd" | grep -o -- '--exp-dir [^ ]*' | cut -d ' ' -f2)
-wer_dir="./$exp_dir/greedy_search"
+
+num_epochs=$(echo "$train_cmd" | grep -o -- '--num-epochs [^ ]*' | cut -d ' ' -f2)
+exp_dir=$(echo "$train_cmd" | grep -o -- '--exp-dir [^ ]*' | cut -d ' ' -f2)
+wer_dir="./$epoch_dir/greedy_search"
 
 recipe=${exp_dir%%/*}
 if [[ ! -d "./$recipe" ]]; then
     printf "Error: /workspace/icefall/egs/%s/ASR/%s does not exist.\n" "$dataset" "$recipe"
     exit 1
 fi
-
-if [[ -d "./$exp_dir" ]]; then
-    rm -f "./$exp_dir"
-fi
-
-ln -sfv "$epoch_dir" ./$exp_dir
 
 
 function find_max_epoch() {
@@ -44,7 +58,7 @@ function find_max_epoch() {
 
 last_epoch=0
 while true; do
-  for file in $exp_dir/epoch-*.pt; do
+  for file in $epoch_dir/epoch-*.pt; do
       if [[ -f "$file" ]]; then
           epoch=$(basename "$file" | cut -d'-' -f2 | cut -d'.' -f1)
           if ((epoch > last_epoch)); then
@@ -57,7 +71,7 @@ while true; do
   printf "Used epoch: %d, Last epoch: %d\n" "$used_epoch" "$last_epoch"
 
   if ((last_epoch <= used_epoch)); then
-      echo "Last epoch is not greater than used epoch, waiting for 60 seconds..."
+      echo "Last epoch is not greater than used epoch, waiting for 300 seconds..."
       sleep 300
       continue
   fi
