@@ -96,7 +96,7 @@ def create_symlink(dataset: str, icefall_path: str):
         expected_target = dataset_paths[dataset]
 
         if not os.path.exists(expected_target):
-            log.warning(f"Warning: Expected path not exist: {expected_target}")
+            log.warning(f"Warning: Expected path not exist: {expected_target}. skipping")
             return
         symlink_path = os.path.join(icefall_path, 'egs', dataset, 'ASR')
         data_dir = 'data'
@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if args.training_dir is None:
-        cdate = datetime.now().strftime("%Y%m%d%H%M%S")
+        cdate = datetime.now().strftime("%Y%m%d%H%M")
         args.training_dir = (f"/{args.dataset_src}/AI_VOICE_WORKSPACE/asr/training_model/"
                              f"{args.dataset_name}_{args.host_ip}_{cdate}")
 

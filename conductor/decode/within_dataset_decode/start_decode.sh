@@ -12,27 +12,22 @@ epoch=$4
 avg=$5
 size=$6
 
-'commonvoice': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/commonvoice/cv_en_161/data",
-'gigaspeech': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/gigaspeech/data_XL",
-'libriheavy': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/libriheavy/data",
-'librispeech': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/librispeech/data"
-
 case $trainset in
   commonvoice)
-    bpe_model="$commonvoice_data/en/lang_bpe_500/bpe.model"
-    lang_dir="/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/commonvoice/cv_en_161/data/en/lang_bpe_500"
+    bpe_model="$COMMONVOICE_DATA/en/lang_bpe_500/bpe.model"
+    lang_dir="$COMMONVOICE_DATA/en/lang_bpe_500"
     ;;
   gigaspeech)
-    bpe_model="/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/gigaspeech/data_XL/lang_bpe_500/bpe.model"
-    lang_dir="/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/gigaspeech/data_XL/lang_bpe_500"
+    bpe_model="$GIGASPEECH_DATA/lang_bpe_500/bpe.model"
+    lang_dir="$GIGASPEECH_DATA/lang_bpe_500"
     ;;
   libriheavy)
-    bpe_model="/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/libriheavy/data/lang_bpe_500/bpe.model"
-    lang_dir="/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/libriheavy/data/lang_bpe_500"
+    bpe_model="$LIBRIHEAVY_DATA/lang_bpe_500/bpe.model"
+    lang_dir="$LIBRIHEAVY_DATA/lang_bpe_500"
     ;;
   librispeech)
-    bpe_model="/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/librispeech/data/lang_bpe_500/bpe.model"
-    lang_dir="/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/librispeech/data/lang_bpe_500"
+    bpe_model="$LIBRISPEECH_DATA/lang_bpe_500/bpe.model"
+    lang_dir="$LIBRISPEECH_DATA/lang_bpe_500"
     ;;
   *)
     echo "Unknown dataset: $trainset"
@@ -51,10 +46,10 @@ echo "--bpe-model: $bpe_model"
 echo "--lang-dir: $lang_dir"
 echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
-if [ -d "./$recipe/exp/greedy_search" ]; then
-    # 清空目录
-    rm -rf ./$recipe/exp/greedy_search/*
-fi
+#if [ -d "./$recipe/exp/greedy_search" ]; then
+#    # 清空目录
+#    rm -rf ./$recipe/exp/greedy_search/*
+#fi
 
 if [ "$size" == "medium" ]; then
   python3 ./$recipe/decode.py \
