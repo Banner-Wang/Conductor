@@ -4,6 +4,11 @@ import subprocess
 import re
 import sys
 from datetime import datetime
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(base_dir)
+from conductor.utils import get_logger
+
+log = get_logger(os.path.basename(__file__))
 
 
 def check_docker_compose():
@@ -11,13 +16,13 @@ def check_docker_compose():
         # 检查 Docker 是否安装
         result = subprocess.run(['docker', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode != 0:
-            print("Docker is not installed on this system. Please install Docker first.")
+            log.error("Docker is not installed on this system. Please install Docker first.")
             return False
 
         # 检查 Docker Compose 是否安装
         result = subprocess.run(['docker', 'compose', 'version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode != 0:
-            print("Docker Compose is not installed on this system. Please install Docker Compose first.")
+            log.error("Docker Compose is not installed on this system. Please install Docker Compose first.")
             return False
 
         # 检查 Docker Compose 版本号是否满足要求
@@ -26,11 +31,11 @@ def check_docker_compose():
         version_parts = version_str.split('.')
         major, minor, patch = [int(part) for part in version_parts]
         if major < 2 or (major == 2 and minor < 25):
-            print(f"Your Docker Compose version ({version_str}) is too old. Please upgrade to version 2.25.0 or later.")
+            log.error(f"Your Docker Compose version ({version_str}) is too old. Please upgrade to version 2.25.0 or later.")
             return False
 
     except Exception as e:
-        print(f"Error checking Docker and Docker Compose: {e}")
+        log.error(f"Error checking Docker and Docker Compose: {e}")
         return False
 
     return True
@@ -48,7 +53,7 @@ def get_interface_ip():
             ip_address, interface = match
             return ip_address
     except Exception as e:
-        print("Error:", e)
+        log.error("Error:", e)
         return {}
 
 
@@ -75,12 +80,15 @@ def update_env_file(env_file, **kwargs):
 
 
 def create_symlink(dataset: str, icefall_path: str):
+    if not icefall_path:
+        log.error(f"Error: --icefall_path is : {icefall_path}")
+        exit(1)
     # 定义期望的目标路径字典
     dataset_paths = {
-        'commonvoice': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/commonvoice/cv_en_161/data",
-        'gigaspeech': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/gigaspeech/data_XL",
-        'libriheavy': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/libriheavy/data",
-        'librispeech': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/librispeech/data"
+        'commonvoice': args.commonvoice_data,
+        'gigaspeech': args.gigaspeech_data,
+        'libriheavy': args.libriheavy_data,
+        'librispeech': args.librispeech_data
     }
 
     # 检查 dataset 是否在字典中
@@ -88,23 +96,22 @@ def create_symlink(dataset: str, icefall_path: str):
         expected_target = dataset_paths[dataset]
 
         if not os.path.exists(expected_target):
-            print(f"Error: Expected path not exist: {expected_target}")
-            exit(1)
-
+            log.warning(f"Warning: Expected path not exist: {expected_target}")
+            return
         symlink_path = os.path.join(icefall_path, 'egs', dataset, 'ASR')
         data_dir = 'data'
         if not os.path.isdir(symlink_path):
-            print(f"Error: Expected path not exist: {symlink_path}")
+            log.error(f"Error: Expected path not exist: {symlink_path}")
             exit(1)
 
         symlink_target = os.path.join(symlink_path, data_dir)
         if not os.path.islink(symlink_target):
             os.symlink(expected_target, symlink_target)
-            print(f"Created symlink for {dataset} at {symlink_target}")
+            log.info(f"Created symlink for {dataset} at {symlink_target}")
         else:
-            print(f"Symlink already exists for {dataset} at {symlink_target}")
+            log.info(f"Symlink already exists for {dataset} at {symlink_target}")
     else:
-        print(f"Unknown dataset: {dataset}")
+        log.error(f"Unknown dataset: {dataset}")
         exit(1)
 
 
@@ -115,6 +122,18 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Update .env file')
     parser.add_argument('--env_file', default='./.env', help='Path to .env file')
+    parser.add_argument('--commonvoice_data', type=str,
+                        default='/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/commonvoice/cv_en_161/data',
+                        help='common voice data')
+    parser.add_argument('--gigaspeech_data', type=str,
+                        default='/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/gigaspeech/data_XL',
+                        help='gigaspeech data')
+    parser.add_argument('--libriheavy_data', type=str,
+                        default='/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/libriheavy/data',
+                        help='libriheavy data')
+    parser.add_argument('--librispeech_data', type=str,
+                        default='/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/librispeech/data',
+                        help='librispeech data')
     parser.add_argument('--host_ip', default=get_interface_ip(), help='host IP address')
     parser.add_argument('--dataset_src', default='nfsmnt', help='Value for DATASET SRC')
     parser.add_argument('--training_dir', default=None, help='training directory, S3 or NFS')

@@ -4,8 +4,18 @@ import shutil
 import hashlib
 import time
 from .basics import get_logger
+from dingtalkchatbot.chatbot import DingtalkChatbot
 
 log = get_logger(os.path.basename(__file__))
+
+
+def notify_dingding(dingding_robot_token, msg):
+    if not dingding_robot_token:
+        raise Exception("Dingding robot token not found")
+    webhook = f"https://oapi.dingtalk.com/robot/send?access_token={dingding_robot_token}"
+    dc = DingtalkChatbot(webhook)
+    final_msg = msg
+    log.info(dc.send_text(msg=final_msg))
 
 
 def epoch_key(s):
