@@ -74,6 +74,40 @@ def update_env_file(env_file, **kwargs):
             f.write(f"{key}={value}\n")
 
 
+def create_symlink(dataset: str, icefall_path: str):
+    # 定义期望的目标路径字典
+    dataset_paths = {
+        'commonvoice': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/commonvoice/cv_en_161/data",
+        'gigaspeech': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/gigaspeech/data_XL",
+        'libriheavy': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/libriheavy/data",
+        'librispeech': "/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/librispeech/data"
+    }
+
+    # 检查 dataset 是否在字典中
+    if dataset in dataset_paths:
+        expected_target = dataset_paths[dataset]
+
+        if not os.path.exists(expected_target):
+            print(f"Error: Expected path not exist: {expected_target}")
+            exit(1)
+
+        symlink_path = os.path.join(icefall_path, 'egs', dataset, 'ASR')
+        data_dir = 'data'
+        if not os.path.isdir(symlink_path):
+            print(f"Error: Expected path not exist: {symlink_path}")
+            exit(1)
+
+        symlink_target = os.path.join(symlink_path, data_dir)
+        if not os.path.islink(symlink_target):
+            os.symlink(expected_target, symlink_target)
+            print(f"Created symlink for {dataset} at {symlink_target}")
+        else:
+            print(f"Symlink already exists for {dataset} at {symlink_target}")
+    else:
+        print(f"Unknown dataset: {dataset}")
+        exit(1)
+
+
 if __name__ == "__main__":
     # 检查 Docker 和 Docker Compose 的安装情况以及版本号
     if not check_docker_compose():
@@ -83,8 +117,8 @@ if __name__ == "__main__":
     parser.add_argument('--env_file', default='./.env', help='Path to .env file')
     parser.add_argument('--host_ip', default=get_interface_ip(), help='host IP address')
     parser.add_argument('--dataset_src', default='nfsmnt', help='Value for DATASET SRC')
-    parser.add_argument('--log_file', default='/workspace/Conductor/docker/train.log', help='Value for LOG_FILE')
     parser.add_argument('--training_dir', default=None, help='training directory, S3 or NFS')
+    parser.add_argument('--model_size', default='medium', help='train model size')
     parser.add_argument('--dataset_name', help='Value for DATASET')
     parser.add_argument('--train_cmd', help='Value for TRAIN_CMD')
     parser.add_argument('--dingding_token', help='Value for DINGDING_TOKEN')
@@ -93,10 +127,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.training_dir is None:
         cdate = datetime.now().strftime("%Y%m%d%H%M%S")
-        args.training_dir = f"/{args.dataset_src}/AI_VOICE_WORKSPACE/asr/training_model/{args.dataset_name}_{args.host_ip}_{cdate}"
+        args.training_dir = (f"/{args.dataset_src}/AI_VOICE_WORKSPACE/asr/training_model/"
+                             f"{args.dataset_name}_{args.host_ip}_{cdate}")
 
     if not os.path.exists(args.training_dir):
         os.makedirs(args.training_dir)
 
     kwargs = {k.upper(): v for k, v in vars(args).items() if v is not None and k != 'env_file'}
     update_env_file(args.env_file, **kwargs)
+
+    datasets = ("commonvoice", "gigaspeech", "libriheavy", "librispeech")
+    for dataset in datasets:
+        create_symlink(dataset, args.icefall_path)
