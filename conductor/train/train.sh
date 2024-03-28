@@ -11,7 +11,7 @@ training_dir="${TRAINING_DIR}"
 
 # 发送容器启动/重启通知
 message="容器启动/重启通知"
-python3 health_check.py $dingding_token $host_ip $dataset_name "${cmd}" --message "$message"
+python3 /workspace/Conductor/conductor/train/health_check.py $dingding_token $host_ip $dataset_name "${cmd}" --message "$message"
 
 # 进入工作目录
 cd /workspace || exit
@@ -52,5 +52,5 @@ cmd=$(echo "$cmd" | sed "s/--start-epoch [0-9]*/--start-epoch $((max_epoch + 1))
 eval "$cmd"
 
 # 发送训练完成通知
-cd /workspace/Conductor/docker || exit
-python3 health_check.py $dingding_token $host_ip $dataset_name "${cmd}" $dataset_src --training_dir "$training_dir"
+cd /workspace/Conductor || exit
+python3 /workspace/Conductor/conductor/train/health_check.py $dingding_token $host_ip $dataset_name "${cmd}" $dataset_src --training_dir "$training_dir"

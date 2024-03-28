@@ -1,7 +1,7 @@
 x-base-service: &base-service
   shm_size: 1gb
   build: .
-  working_dir: /workspace/Conductor/docker
+  working_dir: /workspace/Conductor
   env_file:
     - .env
   volumes:
@@ -14,11 +14,11 @@ x-base-service: &base-service
         devices:
           - driver: nvidia
             capabilities: [gpu]
-  restart_policy:
-    condition: on-failure
-    delay: 5s
-    max_attempts: 5
-    window: 120s
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 5
+      window: 120s
 
 services:
   train:
