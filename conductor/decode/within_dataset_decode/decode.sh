@@ -79,7 +79,7 @@ while true; do
   for ((epoch=last_epoch; epoch>used_epoch; epoch--)); do
       for ((decode_epoch=1; decode_epoch<=epoch-start_epoch; decode_epoch++)); do
           bash /workspace/Conductor/conductor/decode/within_dataset_decode/start_decode.sh \
-              "$dataset" "$dataset" "$recipe" "$epoch" "$decode_epoch" "$model_size"
+              "$dataset" "$dataset" "$epoch_dir" "$recipe" "$epoch" "$decode_epoch" "$model_size"
       done
   done
 

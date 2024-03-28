@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $# -ne 6 ]; then
+if [ $# -ne 7 ]; then
   echo "Usage: $0 <trainset> <testset> <epoch_dir> <recipe> <epoch> <avg> <size> "
   exit 1
 fi
