@@ -12,4 +12,5 @@ RUN pip install \
     pypinyin \
     speechcolab \
     pandas \
-    dingtalkchatbot
+    dingtalkchatbot \
+    matplotlib

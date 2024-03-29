@@ -1,6 +1,7 @@
 #!/bin/bash
 
 icefall_path=$ICEFALL_PATH
+dingding_token="${DINGDING_TOKEN}"
 train_cmd="${TRAIN_CMD}"
 epoch_dir=$TRAINING_DIR
 dataset=$DATASET_NAME
@@ -69,12 +70,10 @@ while true; do
     for ((avg=1; avg<=epoch-decode_start_epoch; avg++)); do
     # 检查组合是否已处理
       if [[ -n ${processed_combinations[$epoch,$avg]} ]]; then
-        echo "decode epoch: $epoch, decode avg: $avg, skip"
         echo "File for epoch $epoch and avg $avg already exists, skipping..."
         continue
       fi
       echo "decode epoch: $epoch, decode avg: $avg"
-
       bash /workspace/Conductor/conductor/decode/within_dataset_decode/start_decode.sh \
       "$dataset" "$dataset" "$epoch_dir" "$recipe" "$epoch" "$avg" "$model_size"
     done
@@ -84,3 +83,6 @@ while true; do
         break
   fi
 done
+
+cd /workspace/Conductor || exit
+python3 /workspace/Conductor/conductor/decode/within_dataset_decode/health_check.py $dingding_token 1 1 "$epoch_dir"

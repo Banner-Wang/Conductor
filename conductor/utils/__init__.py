@@ -7,6 +7,7 @@ from .toolkit import (
     copy_file,
     sync_epochs,
     notify_dingding,
+    link_dingding,
 )
 
 __all__ = [
@@ -14,5 +15,6 @@ __all__ = [
     "copy_file",
     "get_logger",
     "notify_dingding",
+    "link_dingding",
     "sync_epochs",
 ]
