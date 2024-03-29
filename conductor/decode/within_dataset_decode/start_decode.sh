@@ -42,7 +42,6 @@ echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 echo "Training Set: $trainset"
 echo "model size: $size"
 ls -l data
-ls -l ./$recipe/exp/epoch-$epoch.pt
 echo "--bpe-model: $bpe_model"
 echo "--lang-dir: $lang_dir"
 echo "--exp-dir: $epoch_dir"

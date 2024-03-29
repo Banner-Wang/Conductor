@@ -156,19 +156,20 @@ if __name__ == "__main__":
     parser.add_argument('--dataset_src', default='nfsmnt', help='Value for DATASET SRC')
     parser.add_argument('--training_dir', default=None, help='training directory, S3 or NFS')
     parser.add_argument('--model_size', default='medium', help='train model size')
-    parser.add_argument('--start_epoch', default=10, type=int, help='start epoch to decode')
+    parser.add_argument('--decode_start_epoch', default=10, type=int, help='start epoch to decode')
     parser.add_argument('--dataset_name', help='Value for DATASET')
     parser.add_argument('--train_cmd', help='Value for TRAIN_CMD')
     parser.add_argument('--dingding_token', help='Value for DINGDING_TOKEN')
     parser.add_argument('--icefall_path', help='Value for ICEFALL_PATH')
 
     args = parser.parse_args()
-
-    kwargs = {k.upper(): v for k, v in vars(args).items() if v is not None and k != 'env_file'}
+    kwargs = {k.upper(): v for k, v in vars(args).items() if k != 'env_file'}
     env_dict = update_env_file(args.env_file, **kwargs)
+
     if not is_mounted("/%s" % env_dict["dataset_src".upper()]):
         log.error(f"Error: {env_dict['dataset_src'.upper()]} is not mounted.")
         exit(1)
+
     datasets = ("commonvoice", "gigaspeech", "libriheavy", "librispeech")
     for dataset in datasets:
         create_symlink(dataset, env_dict["icefall_path".upper()])

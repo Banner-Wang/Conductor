@@ -7,6 +7,7 @@ dataset=$DATASET_NAME
 model_size=$MODEL_SIZE
 start_epoch=$START_EPOCH
 
+
 # 进入工作目录
 cd /workspace || exit
 
@@ -29,7 +30,7 @@ cd /workspace/icefall/egs/"$dataset"/ASR || exit
 
 num_epochs=$(echo "$train_cmd" | grep -o -- '--num-epochs [^ ]*' | cut -d ' ' -f2)
 exp_dir=$(echo "$train_cmd" | grep -o -- '--exp-dir [^ ]*' | cut -d ' ' -f2)
-wer_dir="./$epoch_dir/greedy_search"
+wer_dir="$epoch_dir/greedy_search"
 
 recipe=${exp_dir%%/*}
 if [[ ! -d "./$recipe" ]]; then
@@ -37,28 +38,10 @@ if [[ ! -d "./$recipe" ]]; then
     exit 1
 fi
 
-
-function find_max_epoch() {
-    files=$(ls $1/wer-summary* 2>/dev/null)
-    if [[ -z "$files" ]]; then
-        max_epoch=0
-    else
-        max_epoch=0
-        for file in $files; do
-            epoch=$(echo $file | grep -o 'epoch-[0-9]*' | sed 's/epoch-//')
-            if [[ -n "$epoch" ]] && ((epoch <= 900)); then
-                if ((epoch > max_epoch)); then
-                    max_epoch=$epoch
-                fi
-            fi
-        done
-    fi
-    echo $max_epoch
-}
-
 last_epoch=0
 while true; do
-  for file in $epoch_dir/epoch-*.pt; do
+  epoch_files=$(ls ${epoch_dir}/epoch-*.pt 2>/dev/null)
+  for file in $epoch_files; do
       if [[ -f "$file" ]]; then
           epoch=$(basename "$file" | cut -d'-' -f2 | cut -d'.' -f1)
           if ((epoch > last_epoch)); then
@@ -66,25 +49,38 @@ while true; do
           fi
       fi
   done
+    # 搜索文件
+  files=$(ls $wer_dir/wer-summary* 2>/dev/null)
 
-  used_epoch=$(find_max_epoch $wer_dir)
-  printf "Used epoch: %d, Last epoch: %d\n" "$used_epoch" "$last_epoch"
+  # 用于保存处理过的epoch和avg值
+  declare -A processed_combinations
 
-  if ((last_epoch <= used_epoch)); then
-      echo "Last epoch is not greater than used epoch, waiting for 300 seconds..."
-      sleep 300
-      continue
-  fi
+  for file in $files; do
+    # 提取测试集名称、epoch值、avg值
+#    test_sub_set=$(echo "$file" | sed 's/wer-summary-(.)-greedy_search./\1/')
+    epoch=$(echo "$file" | grep -oP 'epoch-\K[0-9]+')
+    avg=$(echo "$file" | grep -oP 'avg-\K[0-9]+')
+    # 保存已处理的组合
+    processed_combinations[$epoch,$avg]=1
+  done
 
-  for ((epoch=last_epoch; epoch>used_epoch; epoch--)); do
-      for ((decode_epoch=1; decode_epoch<=epoch-start_epoch; decode_epoch++)); do
-          bash /workspace/Conductor/conductor/decode/within_dataset_decode/start_decode.sh \
-              "$dataset" "$dataset" "$epoch_dir" "$recipe" "$epoch" "$decode_epoch" "$model_size"
-      done
+  #执行for循环，根据以上提取的值
+  for ((epoch=last_epoch; epoch>0; epoch--)); do
+    for ((avg=1; avg<=epoch-start_epoch; avg++)); do
+    # 检查组合是否已处理
+      if [[ -n ${processed_combinations[$epoch,$avg]} ]]; then
+        echo "decode epoch: $epoch, decode avg: $avg, skip"
+        echo "File for epoch $epoch and avg $avg already exists, skipping..."
+        continue
+      fi
+      echo "decode epoch: $epoch, decode avg: $avg"
+
+      bash /workspace/Conductor/conductor/decode/within_dataset_decode/start_decode.sh \
+      "$dataset" "$dataset" "$epoch_dir" "$recipe" "$epoch" "$avg" "$model_size"
+    done
   done
 
   if [ "$last_epoch" -eq "$num_epochs" ]; then
         break
   fi
 done
-
