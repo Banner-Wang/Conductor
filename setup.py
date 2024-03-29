@@ -154,7 +154,7 @@ if __name__ == "__main__":
                         help='librispeech data')
     parser.add_argument('--host_ip', default=get_interface_ip(), help='host IP address')
     parser.add_argument('--dataset_src', default='nfsmnt', help='Value for DATASET SRC')
-    parser.add_argument('--cd /', default=None, help='training directory, S3 or NFS')
+    parser.add_argument('--training_dir', default=None, help='training directory, S3 or NFS')
     parser.add_argument('--model_size', default='medium', help='train model size')
     parser.add_argument('--start_epoch', default=10, type=int, help='start epoch to decode')
     parser.add_argument('--dataset_name', help='Value for DATASET')
