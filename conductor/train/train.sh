@@ -4,7 +4,6 @@
 icefall_path="${ICEFALL_PATH}"
 cmd="${TRAIN_CMD}"
 dataset_name="${DATASET_NAME}"
-dataset_src="${DATASET_SRC}"
 dingding_token="${DINGDING_TOKEN}"
 host_ip="${HOST_IP}"
 training_dir="${TRAINING_DIR}"
@@ -53,4 +52,4 @@ eval "$cmd"
 
 # 发送训练完成通知
 cd /workspace/Conductor || exit
-python3 /workspace/Conductor/conductor/train/health_check.py $dingding_token $host_ip $dataset_name "${cmd}" $dataset_src --training_dir "$training_dir"
+python3 /workspace/Conductor/conductor/train/health_check.py $dingding_token $host_ip $dataset_name "${cmd}" --training_dir "$training_dir"

@@ -5,7 +5,7 @@ train_cmd="${TRAIN_CMD}"
 epoch_dir=$TRAINING_DIR
 dataset=$DATASET_NAME
 model_size=$MODEL_SIZE
-start_epoch=1
+start_epoch=$START_EPOCH
 
 # 进入工作目录
 cd /workspace || exit
