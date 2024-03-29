@@ -102,7 +102,7 @@ def plot_data(data):
     return png_arr
 
 
-def health_check(wer_path, dingding_token):
+def health_check(wer_path, dingding_token, host_ip, dataset_name):
     # 获取当前目录下所有wer-summary开头的文件
     file_list = [os.path.join(wer_path, file) for file in os.listdir(wer_path) if file.startswith('wer-summary')]
     current_len = len(file_list)
@@ -124,7 +124,7 @@ def health_check(wer_path, dingding_token):
         for png_file in png_arr:
             shutil.move(png_file, f"/s3mnt/banner/{png_file}")
             link_dingding(dingding_token,
-                          "WER Summary",
+                          f"WER Summary: {host_ip} {dataset_name}",
                           f"{png_file}",
                           f"https://pro-ai-voice.s3.us-west-1.amazonaws.com/banner/{png_file}")
         # 更新wer_flag.txt文件的值为当前长度
@@ -137,4 +137,4 @@ def health_check(wer_path, dingding_token):
 if __name__ == "__main__":
     args = get_args()
     wer_path = os.path.join(args.training_dir, "greedy_search")
-    health_check(wer_path, args.dingding_token)
+    health_check(wer_path, args.dingding_token, args.hostip, args.dataset_name)

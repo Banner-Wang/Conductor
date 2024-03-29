@@ -2,6 +2,7 @@
 
 icefall_path=$ICEFALL_PATH
 dingding_token="${DINGDING_TOKEN}"
+host_ip="${HOST_IP}"
 train_cmd="${TRAIN_CMD}"
 epoch_dir=$TRAINING_DIR
 dataset=$DATASET_NAME
@@ -85,4 +86,4 @@ while true; do
 done
 
 cd /workspace/Conductor || exit
-python3 /workspace/Conductor/conductor/decode/within_dataset_decode/health_check.py $dingding_token 1 1 "$epoch_dir"
+python3 /workspace/Conductor/conductor/decode/within_dataset_decode/health_check.py $dingding_token $host_ip $dataset "$epoch_dir"
