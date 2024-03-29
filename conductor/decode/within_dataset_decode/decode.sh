@@ -5,7 +5,7 @@ train_cmd="${TRAIN_CMD}"
 epoch_dir=$TRAINING_DIR
 dataset=$DATASET_NAME
 model_size=$MODEL_SIZE
-start_epoch=$START_EPOCH
+decode_start_epoch=$DECODE_START_EPOCH
 
 
 # 进入工作目录
@@ -66,7 +66,7 @@ while true; do
 
   #执行for循环，根据以上提取的值
   for ((epoch=last_epoch; epoch>0; epoch--)); do
-    for ((avg=1; avg<=epoch-start_epoch; avg++)); do
+    for ((avg=1; avg<=epoch-decode_start_epoch; avg++)); do
     # 检查组合是否已处理
       if [[ -n ${processed_combinations[$epoch,$avg]} ]]; then
         echo "decode epoch: $epoch, decode avg: $avg, skip"
