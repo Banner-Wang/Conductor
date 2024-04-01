@@ -114,11 +114,14 @@ while true; do
         continue
       fi
       echo "decode epoch: $epoch, decode avg: $avg"
-      decode_cmd=$(echo "$decode_cmd" | sed -e "s/--epoch [0-9]*/--epoch $epoch/" \
-                                      -e "s/--epoch [0-9]*/--epoch $avg/" \
-                                      -e "s/--exp-dir [^ ]*/--exp-dir $epoch_dir/" \
-                                      -e "s/--bpe-model [^ ]*/--bpe-model $bpe_model/" \
-                                      -e "s/--lang-dir [^ ]*/--lang-dir $lang_dir/")
+      decode_cmd=$(echo "$decode_cmd" | sed -E \
+          -e "s|--epoch [0-9]+|--epoch $epoch|g" \
+          -e "s|--avg [0-9]+|--avg $avg|g" \
+          -e "s|--exp-dir [^ ]+|--exp-dir $epoch_dir|g" \
+          -e "s|--bpe-model [^ ]+|--bpe-model $bpe_model|g" \
+          -e "s|--lang-dir [^ ]+|--lang-dir $lang_dir|g" \
+          -e "s|($|[^-]*)$| \1 --epoch $epoch --avg $avg --exp-dir $epoch_dir --bpe-model $bpe_model --lang-dir $lang_dir|")
+      echo "decode cmd: $decode_cmd"
       eval "$decode_cmd"
     done
   done

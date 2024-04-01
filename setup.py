@@ -31,15 +31,15 @@ def get_args():
                         help='librispeech data')
 
     parser.add_argument('--env_file', default='./docker/.env', help='Path to .env file')
+    parser.add_argument('--dataset_src', default='nfsmnt', help='dataset src root path')
+    parser.add_argument('--decode_start_epoch', default=10, type=int, help='start epoch to decode')
+    parser.add_argument('--decode_end_epoch', help='end epoch to decode')
     parser.add_argument('--dataset_name', help='dataset name')
     parser.add_argument('--dingding_token', help='Value for dingding token')
     parser.add_argument('--icefall_path', help='icefall job path')
-    parser.add_argument('--dataset_src', default='nfsmnt', help='dataset src root path')
     parser.add_argument('--training_dir', help='training directory')
     parser.add_argument('--train_cmd', help='train cmd')
     parser.add_argument('--decode_cmd', help='decode cmd')
-    parser.add_argument('--decode_start_epoch', default=10, type=int, help='start epoch to decode')
-    parser.add_argument('--decode_end_epoch', help='end epoch to decode')
 
     parser.add_argument('--clean', action='store_true', help='Clear the contents of the .env file')
     parser.add_argument('--show', action='store_true', help='Show the contents of the .env file')
