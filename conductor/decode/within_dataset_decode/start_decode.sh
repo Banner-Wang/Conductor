@@ -15,20 +15,20 @@ size=$7
 
 case $trainset in
   commonvoice)
-    bpe_model="$COMMONVOICE_DATA/en/lang_bpe_500/bpe.model"
-    lang_dir="$COMMONVOICE_DATA/en/lang_bpe_500"
+    bpe_model="$COMMONVOICE_DATA_DIR/en/lang_bpe_500/bpe.model"
+    lang_dir="$COMMONVOICE_DATA_DIR/en/lang_bpe_500"
     ;;
   gigaspeech)
-    bpe_model="$GIGASPEECH_DATA/lang_bpe_500/bpe.model"
-    lang_dir="$GIGASPEECH_DATA/lang_bpe_500"
+    bpe_model="$GIGASPEECH_DATA_DIR/lang_bpe_500/bpe.model"
+    lang_dir="$GIGASPEECH_DATA_DIR/lang_bpe_500"
     ;;
   libriheavy)
-    bpe_model="$LIBRIHEAVY_DATA/lang_bpe_500/bpe.model"
-    lang_dir="$LIBRIHEAVY_DATA/lang_bpe_500"
+    bpe_model="$LIBRIHEAVY_DATA_DIR/lang_bpe_500/bpe.model"
+    lang_dir="$LIBRIHEAVY_DATA_DIR/lang_bpe_500"
     ;;
   librispeech)
-    bpe_model="$LIBRISPEECH_DATA/lang_bpe_500/bpe.model"
-    lang_dir="$LIBRISPEECH_DATA/lang_bpe_500"
+    bpe_model="$LIBRISPEECH_DATA_DIR/lang_bpe_500/bpe.model"
+    lang_dir="$LIBRISPEECH_DATA_DIR/lang_bpe_500"
     ;;
   *)
     echo "Unknown dataset: $trainset"

@@ -1,23 +1,63 @@
 #!/bin/bash
 
-icefall_path=$ICEFALL_PATH
+required_vars=(
+    "ICEFALL_PATH"
+    "DINGDING_TOKEN"
+    "HOST_IP"
+    "TRAINING_DIR"
+    "DATASET_NAME"
+    "DECODE_CMD"
+    "DECODE_START_EPOCH"
+    "DECODE_END_EPOCH"
+    "COMMONVOICE_DATA_DIR"
+    "GIGASPEECH_DATA_DIR"
+    "LIBRIHEAVY_DATA_DIR"
+    "LIBRISPEECH_DATA_DIR"
+)
+
+for var in "${required_vars[@]}"; do
+    if [ -z "${!var}" ]; then
+        echo "Error: $var not set"
+        exit 1
+    fi
+done
+
+icefall_path=${ICEFALL_PATH}
 dingding_token="${DINGDING_TOKEN}"
 host_ip="${HOST_IP}"
-train_cmd="${TRAIN_CMD}"
-epoch_dir=$TRAINING_DIR
-dataset=$DATASET_NAME
-model_size=$MODEL_SIZE
-decode_start_epoch=$DECODE_START_EPOCH
+epoch_dir=${TRAINING_DIR}
+dataset=${DATASET_NAME}
+decode_cmd="${DECODE_CMD}"
+decode_start_epoch=${DECODE_START_EPOCH}
+decode_end_epoch="${DECODE_END_EPOCH}"
+
+
+case $dataset in
+  commonvoice)
+    bpe_model="$COMMONVOICE_DATA_DIR/en/lang_bpe_500/bpe.model"
+    lang_dir="$COMMONVOICE_DATA_DIR/en/lang_bpe_500"
+    ;;
+  gigaspeech)
+    bpe_model="$GIGASPEECH_DATA_DIR/lang_bpe_500/bpe.model"
+    lang_dir="$GIGASPEECH_DATA_DIR/lang_bpe_500"
+    ;;
+  libriheavy)
+    bpe_model="$LIBRIHEAVY_DATA_DIR/lang_bpe_500/bpe.model"
+    lang_dir="$LIBRIHEAVY_DATA_DIR/lang_bpe_500"
+    ;;
+  librispeech)
+    bpe_model="$LIBRISPEECH_DATA_DIR/lang_bpe_500/bpe.model"
+    lang_dir="$LIBRISPEECH_DATA_DIR/lang_bpe_500"
+    ;;
+  *)
+    echo "Unknown dataset: $dataset"
+    exit 1
+    ;;
+esac
 
 
 # 进入工作目录
 cd /workspace || exit
-
-# 检查 ICEFALL_PATH 是否设置
-if [ -z "$icefall_path" ]; then
-    echo "ICEFALL_PATH not set"
-    exit 1
-fi
 
 # 链接 icefall 目录
 if [ ! -L "icefall" ]; then
@@ -30,15 +70,14 @@ fi
 
 cd /workspace/icefall/egs/"$dataset"/ASR || exit
 
-num_epochs=$(echo "$train_cmd" | grep -o -- '--num-epochs [^ ]*' | cut -d ' ' -f2)
-exp_dir=$(echo "$train_cmd" | grep -o -- '--exp-dir [^ ]*' | cut -d ' ' -f2)
-wer_dir="$epoch_dir/greedy_search"
+decode_method=$(echo "$train_cmd" | grep -o -- '--decoding-method [^ ]*' | cut -d ' ' -f2)
+wer_dir="$epoch_dir/$decode_method"
 
-recipe=${exp_dir%%/*}
-if [[ ! -d "./$recipe" ]]; then
-    printf "Error: /workspace/icefall/egs/%s/ASR/%s does not exist.\n" "$dataset" "$recipe"
-    exit 1
-fi
+#recipe=${exp_dir%%/*}
+#if [[ ! -d "./$recipe" ]]; then
+#    printf "Error: /workspace/icefall/egs/%s/ASR/%s does not exist.\n" "$dataset" "$recipe"
+#    exit 1
+#fi
 
 last_epoch=0
 while true; do
@@ -75,12 +114,16 @@ while true; do
         continue
       fi
       echo "decode epoch: $epoch, decode avg: $avg"
-      bash /workspace/Conductor/conductor/decode/within_dataset_decode/start_decode.sh \
-      "$dataset" "$dataset" "$epoch_dir" "$recipe" "$epoch" "$avg" "$model_size"
+      decode_cmd=$(echo "$decode_cmd" | sed -e "s/--epoch [0-9]*/--epoch $epoch/" \
+                                      -e "s/--epoch [0-9]*/--epoch $avg/" \
+                                      -e "s/--exp-dir [^ ]*/--exp-dir $epoch_dir/" \
+                                      -e "s/--bpe-model [^ ]*/--bpe-model $bpe_model/" \
+                                      -e "s/--lang-dir [^ ]*/--lang-dir $lang_dir/")
+      eval "$decode_cmd"
     done
   done
 
-  if [ "$last_epoch" -eq "$num_epochs" ]; then
+  if [ "$last_epoch" -eq "$decode_end_epoch" ]; then
         break
   fi
 done

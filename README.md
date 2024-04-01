@@ -1,20 +1,9 @@
-# icefall 训练环境
+## 先决条件
 
-## 介绍
-
-这个项目是一个 Docker Compose 配置文件,用于定义和配置名为 "icefall"
-的服务,该服务用于训练语音识别模型。它包括以下主要组件:
-
-1. **Dockerfile**:基于 `k2fsa/icefall:torch2.0.0-cuda11.7` 镜像构建,安装了必要的依赖包。
-
-2. **Docker Compose 配置文件**:定义了 "icefall" 服务的配置,包括共享内存大小、工作目录、环境变量、数据卷映射、GPU
-   资源预留、重启策略和健康检查等。
-
-3. **train.sh 脚本**:用于在 Docker 容器中设置 icefall 工作环境,并根据训练进度和日志调整参数后运行训练命令。
-
-4. **health_check.py 脚本**:用于定期检查训练进度,并通过钉钉机器人进行通知。
-
-5. **setup.py 脚本**:用于更新 ` .env` 文件中的环境变量。
+- Python 3.10及以上
+- Docker
+- Docker Compose (版本 2.25.0 或更高)
+- pip install dingtalkchatbot
 
 ## 快速开始
 
@@ -35,98 +24,95 @@ cd Conductor
 
 ```bash
 python3 setup.py \
-    --dataset_name <YOUR_DATASET_NAME> \
-    --dataset_src <YOUR_DATASET_SRC> \
-    --train_cmd "<YOUR_TRAIN_CMD>" \
-    --model_size <YOUR_MODEL_SIZE> \
-    --dingding_token <YOUR_DINGDING_TOKEN> \
-    --icefall_path <YOUR_ICEFALL_PATH> \
-    --training_dir <YOUR_TRAIN_DIR> 
-```
-
-替换上面命令中的占位符为您实际的值:
-
-- `YOUR_DATASET_NAME`: 您要使用的数据集名称
-- `YOUR_DATASET_SRC`: 您要使用的数据集所在的根目录，默认`/data`
-- `YOUR_MODEL_SIZE`: 您训练数据集的size
-- `YOUR_TRAIN_CMD`: 训练命令,如 `python3 train.py ...`
-- `YOUR_DINGDING_TOKEN`: 钉钉机器人的 Token
-- `YOUR_ICEFALL_PATH`: icefall 代码的本地路径
-- `YOUR_TRAINING_DIR`: epoch远程存放路径
-
-简单示例：
-```bash
-python3 setup.py \
     --dataset_name librispeech \
     --train_cmd "python3 ./zipformer/train.py \
         --world-size 1 \
-        --num-epochs 50 \
+        --num-epochs 20 \
         --start-epoch 1 \
         --use-fp16 1 \
         --exp-dir zipformer/exp \
         --causal 0 \
-        --full-libri 1 \
-        --base-lr 0.030 \
-        --max-duration 500" \
-    --dingding_token xxxxxxxxxxxxxxxxxxxxxxx \
-    --icefall_path "/data/AI_VOICE_WORKSPACE/asr/tests/icefall"
-
+        --full-libri 0 \
+        --base-lr 0.025 \
+        --max-duration 350" \
+    --dingding_token xxxxxxxxxxxxxxxxxxxxxx \
+    --icefall_path "/tmp/banner/Conductor/icefall"
 ```
-4. 启动 Docker 容器:
+
+4. 启动 Docker 容器开始训练:
 
 ```bash
 cd docker
-docker compose -p <YOUR_DOCKER_NAME> up train -d  # 启动训练
-docker compose -p <YOUR_DOCKER_NAME> up within_decode -d  # 启动decode
+docker compose -p <YOUR_DOCKER_NAME> up train -d 
+
 ```
 
-这将使用 `YOUR_DOCKER_NAME` 作为容器前缀名称启动服务。您可以通过 `tail -f <YOUR_LOG_FILE>` 命令查看日志,确认训练过程正常进行。
+## 设置环境说明
 
-现在,您已经成功配置并启动了 icefall 训练环境。训练完成后,模型文件将保存在 `icefall/egs/${YOUR_DATASET_NAME}/ASR/` 目录下。
+```bash
+python setup.py [选项]
+```
 
-## 使用方法
+### 选项
 
-1. 确保安装了 Docker 和 Docker Compose。
+- `--dataset_name`: 数据集名称
+- `--dingding_token`: DingDing 令牌的值
+- `--icefall_path`: Icefall 作业路径
+- `--commonvoice_data_dir`: Common Voice 数据目录 (
+  默认: `AI_VOICE_WORKSPACE/asr/prepared_data/commonvoice/cv_en_161/data`)
+- `--gigaspeech_data_dir`: GigaSpeech 数据目录 (默认: `AI_VOICE_WORKSPACE/asr/prepared_data/gigaspeech/data_XL`)
+- `--libriheavy_data_dir`: LibriHeavy 数据目录 (默认: `AI_VOICE_WORKSPACE/asr/prepared_data/libriheavy/data`)
+- `--librispeech_data_dir`: LibriSpeech 数据目录 (默认: `AI_VOICE_WORKSPACE/asr/prepared_data/librispeech/data`)
+- `--env_file`: `.env` 文件的路径 (默认: `./docker/.env`)
+- `--dataset_src`: 数据集源根路径 (默认: `nfsmnt`)
+- `--decode_start_epoch`: 开始解码的轮次 (默认: 10)
+- `--training_dir`: 训练目录
+- `--train_cmd`: 训练命令
+- `--decode_cmd`: 解码命令
+- `--clean`: 清空 `.env` 文件的内容
+- `--show`: 显示 `.env` 文件的内容
 
-2. 将代码克隆到本地目录。
+## 功能
 
-3. 准备好训练数据集,并将其放置在 `/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/` 目录下。
+1. 检查是否安装了 Docker 和 Docker Compose,并满足版本要求。
+2. 读取现有的 `.env` 文件(如果存在),并根据提供的选项更新环境变量。
+3. 检查是否挂载了所需的目录(`/s3mnt` 和 `/nfsmnt`)。
+4. 获取主机 IP 地址。
+5. 使用新的环境变量更新 `.env` 文件。
+6. 在 Icefall 项目中为指定的数据集创建符号链接。
+7. 提供选项来清空 `.env` 文件的内容(`--clean`)和显示 `.env` 文件的内容(`--show`)。
 
-4. 修改 `.env` 文件,设置必要的环境变量,如 `DATASET_NAME`、`DATASET_SRC`、`TRAIN_CMD`、`LOG_FILE`、`DINGDING_TOKEN` 和 `ICEFALL_PATH` 等。
+4. 启动 Docker 容器:
 
-5. 运行 `docker compose up -d` 命令启动服务。
+###### 4.1 启动训练
 
-6. 通过 `docker logs` 命令查看日志,确认训练过程正常进行。
+```bash
+cd docker
+docker compose -p <YOUR_DOCKER_NAME> up train -d 
 
-7. 训练完成后,模型文件将保存在 `icefall/egs/${DATASET}/ASR/` 目录下。
+```
 
-## 配置文件解释
+###### 4.2 启动decode
 
-### Docker Compose 配置
+```bash
+cd docker
+docker compose -p <YOUR_DOCKER_NAME> up within_decode -d 
+```
 
-- `services.icefall` 定义了 "icefall" 服务。
-- `shm_size` 设置共享内存大小。
-- `build` 指定使用当前目录下的 Dockerfile 构建镜像。
-- `working_dir` 设置容器中的工作目录。
-- `.env` 从 ` .env` 文件加载环境变量。
-- `volumes` 映射主机目录到容器内。
-- `command` 定义容器启动后执行的命令。
-- `deploy` 定义服务部署相关配置,如 GPU 资源预留和重启策略。
-- `healthcheck` 定义健康检查设置。
+5. 清空 `.env` 文件的内容:
 
-### train.sh 脚本
+```bash
+python setup.py --clean
+```
 
-该脚本的主要作用是:
+6. 显示 `.env` 文件的内容:
 
-- 自动链接数据和代码
-- 根据之前的训练进度设置开始 epoch
-- 根据错误日志调整训练参数
-- 运行修改后的训练命令
+```bash
+python setup.py --show
+```
 
-### health_check.py 脚本
+## 注意事项
 
-该脚本用于定期检查训练进度,并通过钉钉机器人进行通知。
-
-### setup.py 脚本
-
-该脚本用于更新 ` .env` 文件中的环境变量。
+- 该脚本需要挂载某些目录(`/s3mnt` 和 `/nfsmnt`)。如果它们没有被挂载,脚本将以错误退出。
+- 该脚本使用 `conductor.utils.get_logger` 函数记录消息。确保已安装 `conductor` 包并正确配置。
+- 该脚本假设 Icefall 项目中存在某些路径和目录。如果需要,请根据你的项目结构修改路径。

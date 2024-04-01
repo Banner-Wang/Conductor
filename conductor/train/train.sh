@@ -1,12 +1,27 @@
 #!/bin/bash
+required_vars=(
+    "ICEFALL_PATH"
+    "TRAIN_CMD"
+    "DATASET_NAME"
+    "DINGDING_TOKEN"
+    "HOST_IP"
+    "TRAINING_DIR"
+)
 
-# 获取环境变量
+for var in "${required_vars[@]}"; do
+    if [ -z "${!var}" ]; then
+        echo "Error: $var not set"
+        exit 1
+    fi
+done
+
 icefall_path="${ICEFALL_PATH}"
 cmd="${TRAIN_CMD}"
 dataset_name="${DATASET_NAME}"
 dingding_token="${DINGDING_TOKEN}"
 host_ip="${HOST_IP}"
 training_dir="${TRAINING_DIR}"
+
 
 # 发送容器启动/重启通知
 message="容器启动/重启通知"
@@ -16,10 +31,7 @@ python3 /workspace/Conductor/conductor/train/health_check.py $dingding_token $ho
 cd /workspace || exit
 
 # 检查 ICEFALL_PATH 是否设置
-if [ -z "$icefall_path" ]; then
-    echo "ICEFALL_PATH not set"
-    exit 1
-fi
+
 
 # 链接 icefall 目录
 if [ ! -L "icefall" ]; then
