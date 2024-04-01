@@ -115,7 +115,6 @@ while true; do
       fi
       echo "decode epoch: $epoch, decode avg: $avg"
       # 使用sed命令替换或新增参数
-      # 使用sed命令替换或新增参数
       decode_cmd=$(echo "$decode_cmd" | sed -E \
           -e "s|--epoch [0-9]+|--epoch $epoch|" \
           -e "s|--avg [0-9]+|--avg $avg|" \
@@ -127,8 +126,6 @@ while true; do
           -e "/--exp-dir [^ ]+/! s|$| --exp-dir $epoch_dir|" \
           -e "/--bpe-model [^ ]+/! s|$| --bpe-model $bpe_model|" \
           -e "/--lang-dir [^ ]+/! s|$| --lang-dir $lang_dir|")
-
-
       echo "decode cmd: $decode_cmd"
       eval "$decode_cmd"
     done
