@@ -70,7 +70,7 @@ fi
 
 cd /workspace/icefall/egs/"$dataset"/ASR || exit
 
-decode_method=$(echo "$train_cmd" | grep -o -- '--decoding-method [^ ]*' | cut -d ' ' -f2)
+decode_method=$(echo "$decode_cmd" | grep -o -- '--decoding-method [^ ]*' | cut -d ' ' -f2)
 wer_dir="$epoch_dir/$decode_method"
 
 #recipe=${exp_dir%%/*}
@@ -114,13 +114,21 @@ while true; do
         continue
       fi
       echo "decode epoch: $epoch, decode avg: $avg"
+      # 使用sed命令替换或新增参数
+      # 使用sed命令替换或新增参数
       decode_cmd=$(echo "$decode_cmd" | sed -E \
-          -e "s|--epoch [0-9]+|--epoch $epoch|g" \
-          -e "s|--avg [0-9]+|--avg $avg|g" \
-          -e "s|--exp-dir [^ ]+|--exp-dir $epoch_dir|g" \
-          -e "s|--bpe-model [^ ]+|--bpe-model $bpe_model|g" \
-          -e "s|--lang-dir [^ ]+|--lang-dir $lang_dir|g" \
-          -e "s|($|[^-]*)$| \1 --epoch $epoch --avg $avg --exp-dir $epoch_dir --bpe-model $bpe_model --lang-dir $lang_dir|")
+          -e "s|--epoch [0-9]+|--epoch $epoch|" \
+          -e "s|--avg [0-9]+|--avg $avg|" \
+          -e "s|--exp-dir [^ ]+|--exp-dir $epoch_dir|" \
+          -e "s|--bpe-model [^ ]+|--bpe-model $bpe_model|" \
+          -e "s|--lang-dir [^ ]+|--lang-dir $lang_dir|" \
+          -e "/--epoch [0-9]+/! s|$| --epoch $epoch|" \
+          -e "/--avg [0-9]+/! s|$| --avg $avg|" \
+          -e "/--exp-dir [^ ]+/! s|$| --exp-dir $epoch_dir|" \
+          -e "/--bpe-model [^ ]+/! s|$| --bpe-model $bpe_model|" \
+          -e "/--lang-dir [^ ]+/! s|$| --lang-dir $lang_dir|")
+
+
       echo "decode cmd: $decode_cmd"
       eval "$decode_cmd"
     done
