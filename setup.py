@@ -7,6 +7,8 @@ from datetime import datetime
 from conductor.utils import get_logger
 
 log = get_logger(os.path.basename(__file__))
+NFS_SERVER_IP = ['10.68.89.114', '172.16.1.223']
+DATASETS = ("commonvoice", "gigaspeech", "libriheavy", "librispeech")
 
 
 def is_mounted(mount_point):
@@ -46,7 +48,14 @@ def check_docker_compose():
     return True
 
 
-def get_interface_ip():
+def __mnt_check(*mnt_dirs):
+    for _mnt_dir in mnt_dirs:
+        if not is_mounted(_mnt_dir):
+            log.error(f"Error: {_mnt_dir} is not mounted.")
+            exit(1)
+
+
+def __get_interface_ip():
     try:
         result = subprocess.run(['ip', 'addr', 'show'], capture_output=True, text=True)
         output = result.stdout
@@ -62,75 +71,77 @@ def get_interface_ip():
         return {}
 
 
-def update_env_file(env_file, **kwargs):
+def update_env_file(env_file_path, **kwargs):
     env_dict = {}
-    if os.path.exists(env_file):
-        with open(env_file, 'r') as f:
-            lines = f.readlines()
 
-        for line in lines:
-            line = line.strip()
-            if line and not line.startswith('#'):
-                key, value = line.split('=', 1)
-                env_dict[key.upper()] = value
-
-    # 更新字典中的值
+    # 读取现有的环境变量文件
+    if os.path.exists(env_file_path):
+        with open(env_file_path, 'r') as file:
+            for line in file:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    key, value = line.split('=', 1)
+                    env_dict[key.upper()] = value
+    # 更新环境变量
     for key, value in kwargs.items():
-        env_dict[key.upper()] = value
+        key_upper = key.upper()
+        env_dict[key_upper] = value
 
-    if env_dict["TRAINING_DIR"] is None:
+    host_ip = __get_interface_ip()
+    env_dict["HOST_IP"] = host_ip
+    if host_ip in NFS_SERVER_IP:
+        env_dict["DATASET_SRC"] = "data"
+        __mnt_check('/s3mnt')
+    else:
+        __mnt_check('/s3mnt', '/nfsmnt')
+
+    if "TRAINING_DIR" not in env_dict:
         cdate = datetime.now().strftime("%Y%m%d%H%M")
-        dataser_src = env_dict["DATASET_SRC"]
-        dataser_name = env_dict["DATASET_NAME"]
-        host_ip = env_dict["HOST_IP"]
-        env_dict["TRAINING_DIR"] = (f"/{dataser_src}/AI_VOICE_WORKSPACE/asr/training_model/"
-                                    f"{dataser_name}_{host_ip}_{cdate}")
+        dataset_src = env_dict.get("DATASET_SRC")
+        dataset_name = env_dict.get("DATASET_NAME")
+        training_dir = f"/{dataset_src}/AI_VOICE_WORKSPACE/asr/training_model/{dataset_name}_{host_ip}_{cdate}"
+        env_dict["TRAINING_DIR"] = training_dir
+        os.makedirs(training_dir, exist_ok=True)
 
-    if not os.path.exists(env_dict["TRAINING_DIR"]):
-        os.makedirs(env_dict["TRAINING_DIR"])
-
-    # 写回更新后的内容到 .env 文件
-    with open(env_file, 'w') as f:
-        for key, value in env_dict.items():
-            f.write(f"{key}={value}\n")
+    # 写入更新后的环境变量到文件
+    try:
+        with open(env_file_path, 'w') as file:
+            for key, value in env_dict.items():
+                file.write(f"{key}={value}\n")
+    except IOError as error:
+        print(f"Error writing to {env_file_path}: {error}")
 
     return env_dict
 
 
-def create_symlink(dataset: str, icefall_path: str):
+def create_symlink(dataset: str, env_dict: dict):
+    icefall_path = env_dict["ICEFALL_PATH"]
     if not icefall_path:
         log.error(f"Error: --icefall_path is : {icefall_path}")
         exit(1)
-    # 定义期望的目标路径字典
-    dataset_paths = {
-        'commonvoice': args.commonvoice_data,
-        'gigaspeech': args.gigaspeech_data,
-        'libriheavy': args.libriheavy_data,
-        'librispeech': args.librispeech_data
-    }
 
-    # 检查 dataset 是否在字典中
-    if dataset in dataset_paths:
-        expected_target = dataset_paths[dataset]
+    dataset_src = env_dict["DATASET_SRC"]
+    middle_path = f"AI_VOICE_WORKSPACE/asr/prepared_data/{dataset}"
+    tail_path = env_dict[f"{dataset.upper()}_DATA_PATH"]
 
-        if not os.path.exists(expected_target):
-            log.warning(f"Warning: Expected path not exist: {expected_target}. skipping")
-            return
-        symlink_path = os.path.join(icefall_path, 'egs', dataset, 'ASR')
-        data_dir = 'data'
-        if not os.path.isdir(symlink_path):
-            log.error(f"Error: Expected path not exist: {symlink_path}")
-            exit(1)
+    dataset_path = os.path.join('/', dataset_src, middle_path, tail_path)
 
-        symlink_target = os.path.join(symlink_path, data_dir)
-        if not os.path.islink(symlink_target):
-            os.symlink(expected_target, symlink_target)
-            log.info(f"Created symlink for {dataset} at {symlink_target}")
-        else:
-            log.info(f"Symlink already exists for {dataset} at {symlink_target}")
-    else:
-        log.error(f"Unknown dataset: {dataset}")
+    if not os.path.exists(dataset_path):
+        log.warning(f"Warning: Expected path not exist: {dataset_path}. skipping")
+        return
+
+    symlink_path = os.path.join(icefall_path, 'egs', dataset, 'ASR')
+    if not os.path.isdir(symlink_path):
+        log.error(f"Error: Expected path not exist: {symlink_path}")
         exit(1)
+
+    data_dir = 'data'
+    symlink_target = os.path.join(symlink_path, data_dir)
+    if not os.path.islink(symlink_target):
+        os.symlink(dataset_path, symlink_target)
+        log.info(f"Created symlink for {dataset} at {symlink_target}")
+    else:
+        log.info(f"Symlink already exists for {dataset} at {symlink_target}")
 
 
 if __name__ == "__main__":
@@ -140,36 +151,37 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Update .env file')
     parser.add_argument('--env_file', default='./docker/.env', help='Path to .env file')
-    parser.add_argument('--commonvoice_data', type=str,
+    parser.add_argument('--dataset_name', required=True, help='dataset name')
+    parser.add_argument('--dingding_token', required=True, help='Value for dingding token')
+    parser.add_argument('--icefall_path', required=True, help='icefall job path')
+
+    parser.add_argument('--commonvoice_data',
+                        type=str,
                         default='/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/commonvoice/cv_en_161/data',
                         help='common voice data')
-    parser.add_argument('--gigaspeech_data', type=str,
+    parser.add_argument('--gigaspeech_data',
+                        type=str,
                         default='/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/gigaspeech/data_XL',
                         help='gigaspeech data')
-    parser.add_argument('--libriheavy_data', type=str,
+    parser.add_argument('--libriheavy_data',
+                        type=str,
                         default='/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/libriheavy/data',
                         help='libriheavy data')
-    parser.add_argument('--librispeech_data', type=str,
+    parser.add_argument('--librispeech_data',
+                        type=str,
                         default='/nfsmnt/AI_VOICE_WORKSPACE/asr/prepared_data/librispeech/data',
                         help='librispeech data')
-    parser.add_argument('--host_ip', default=get_interface_ip(), help='host IP address')
-    parser.add_argument('--dataset_src', default='nfsmnt', help='Value for DATASET SRC')
-    parser.add_argument('--training_dir', default=None, help='training directory, S3 or NFS')
-    parser.add_argument('--model_size', default='medium', help='train model size')
+
+    parser.add_argument('--env_file', default='./docker/.env', help='Path to .env file')
+    parser.add_argument('--dataset_src', default='nfsmnt', help='dataset src root path')
     parser.add_argument('--decode_start_epoch', default=10, type=int, help='start epoch to decode')
-    parser.add_argument('--dataset_name', help='Value for DATASET')
-    parser.add_argument('--train_cmd', help='Value for TRAIN_CMD')
-    parser.add_argument('--dingding_token', help='Value for DINGDING_TOKEN')
-    parser.add_argument('--icefall_path', help='Value for ICEFALL_PATH')
+    parser.add_argument('--training_dir', help='training directory')
+    parser.add_argument('--train_cmd', help='train cmd')
+    parser.add_argument('--decode_cmd', help='decode cmd')
 
     args = parser.parse_args()
     kwargs = {k.upper(): v for k, v in vars(args).items() if k != 'env_file'}
     env_dict = update_env_file(args.env_file, **kwargs)
 
-    if not is_mounted("/%s" % env_dict["dataset_src".upper()]):
-        log.error(f"Error: {env_dict['dataset_src'.upper()]} is not mounted.")
-        exit(1)
-
-    datasets = ("commonvoice", "gigaspeech", "libriheavy", "librispeech")
-    for dataset in datasets:
-        create_symlink(dataset, env_dict["icefall_path".upper()])
+    for dataset in DATASETS:
+        create_symlink(dataset, env_dict)

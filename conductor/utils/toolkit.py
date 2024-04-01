@@ -22,10 +22,11 @@ def link_dingding(dingding_robot_token, title, text, message_url):
     if not dingding_robot_token:
         raise Exception("Dingding robot token not found")
     webhook = f"https://oapi.dingtalk.com/robot/send?access_token={dingding_robot_token}"
-    dc = DingtalkChatbot(webhook)
+    dc = DingtalkChatbot(webhook, pc_slide=False)
     log.info(dc.send_link(title=title,
                           text=text,
-                          message_url=message_url))
+                          message_url=message_url,
+                          pic_url=message_url))
 
 
 def epoch_key(s):

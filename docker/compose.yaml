@@ -6,6 +6,7 @@ x-base-service: &base-service
     - .env
   volumes:
     - /data:/data
+    - /s3mnt:/s3mnt
     - /${DATASET_SRC}:/${DATASET_SRC}
     - ./..:/workspace/Conductor
   deploy:
