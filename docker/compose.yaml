@@ -35,10 +35,3 @@ services:
   within_decode:
     <<: *base-service
     command: bash -c "bash /workspace/Conductor/conductor/decode/within_dataset_decode/decode.sh"
-    healthcheck:
-      test: [ "CMD", "python", "/workspace/Conductor/conductor/decode/within_dataset_decode/health_check.py", "${DINGDING_TOKEN}", "${HOST_IP}", "${DATASET_NAME}", "${TRAINING_DIR}" ]
-      interval: 3600s
-      timeout: 120s
-      retries: 3
-      start_period: 5s
-

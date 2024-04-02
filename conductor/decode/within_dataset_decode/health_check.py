@@ -19,7 +19,9 @@ def get_args():
     parser.add_argument("dingding_token", type=str, help="Dingding robot token.")
     parser.add_argument("hostip", type=str, help="host IP address.")
     parser.add_argument("dataset_name", type=str, help="dataset name.")
-    parser.add_argument("training_dir", type=str, help="epoch path to decode")
+    parser.add_argument("training_dir", type=str, help="epoch path to decode.")
+    parser.add_argument("decode_method", type=str, help="decode method.")
+    parser.add_argument("testset_name", type=str, help="testset name.")
     return parser.parse_args()
 
 
@@ -27,7 +29,7 @@ def bj_time():
     utc_now = datetime.utcnow()
     cst_offset = timedelta(hours=8)
     beijing_time = utc_now + cst_offset
-    beijing_time_str = beijing_time.strftime('%Y-%m-%d %H:%M:%S')
+    beijing_time_str = beijing_time.strftime("%Y%m%d%H%M")
     return beijing_time_str
 
 
@@ -96,13 +98,14 @@ def plot_data(data):
         ax.set_title(f'WER Summary - {test_set}')
         fig.tight_layout()
         plt.colorbar(im)
-        plt.savefig(f'wer_summary_{test_set}_heatmap.png')
-        png_arr.append(f'wer_summary_{test_set}_heatmap.png')
+        png_name = f"wer_summary_{test_set}_{bj_time()}.png"
+        plt.savefig(png_name)
+        png_arr.append(png_name)
         plt.close()
     return png_arr
 
 
-def health_check(wer_path, dingding_token, host_ip, dataset_name):
+def health_check(wer_path, dingding_token, host_ip, dataset_name, testset_name):
     # 获取当前目录下所有wer-summary开头的文件
     file_list = [os.path.join(wer_path, file) for file in os.listdir(wer_path) if file.startswith('wer-summary')]
     current_len = len(file_list)
@@ -122,11 +125,11 @@ def health_check(wer_path, dingding_token, host_ip, dataset_name):
         save_data_to_file(data, 'wer_summary.txt')
         png_arr = plot_data(data)
         for png_file in png_arr:
-            shutil.move(png_file, f"/s3mnt/banner/{png_file}")
-            link_dingding(dingding_token,
-                          f"WER Summary: {host_ip} {dataset_name}",
-                          f"{png_file}",
-                          f"https://pro-ai-voice.s3.us-west-1.amazonaws.com/banner/{png_file}")
+            shutil.move(png_file, f"/s3mnt/AI_VOICE_WORKSPACE/resouce/{dataset_name}_{png_file}")
+            text = f"IP: {host_ip}\ntrain set: {dataset_name}\n decode set: {testset_name}\n{dataset_name}_{png_file}"
+            url = (f"https://pro-ai-voice.s3.us-west-1.amazonaws.com/"
+                   f"AI_VOICE_WORKSPACE/resouce/{dataset_name}_{png_file}")
+            link_dingding(dingding_token, f"WER Summary", text, url)
         # 更新wer_flag.txt文件的值为当前长度
         with open('wer_flag.txt', 'w') as f:
             f.write(str(current_len))
@@ -136,5 +139,5 @@ def health_check(wer_path, dingding_token, host_ip, dataset_name):
 
 if __name__ == "__main__":
     args = get_args()
-    wer_path = os.path.join(args.training_dir, "greedy_search")
-    health_check(wer_path, args.dingding_token, args.hostip, args.dataset_name)
+    wer_path = os.path.join(args.training_dir, args.decode_method)
+    health_check(wer_path, args.dingding_token, args.hostip, args.dataset_name, args.testset_name)
