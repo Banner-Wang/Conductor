@@ -95,7 +95,7 @@ def plot_data(wer_path, data):
         ax.set_title(f'WER Summary - {test_set}')
         fig.tight_layout()
         plt.colorbar(im)
-        png_name = f"wer_summary_{test_set}_{bj_time()}.png"
+        png_name = f"wer_summary_{test_set}.png"
         png_file_path = os.path.join(wer_path, png_name)
         plt.savefig(png_file_path)
         png_arr.append(png_name)
@@ -125,7 +125,7 @@ def main(wer_path, dingding_token, host_ip, dataset_name, testset_name):
         png_arr = plot_data(wer_path, data)
         for png_file in png_arr:
             png_file_path = os.path.join(wer_path, png_file)
-            png_name = f"{dataset_name}_{png_file}"
+            png_name = f"{dataset_name}_{bj_time()}_{png_file}"
             shutil.copy(png_file_path, os.path.join("/s3mnt/AI_VOICE_WORKSPACE/resouce", png_name))
             title = f"IP: {host_ip}\ntrain set: {dataset_name}\n decode set: {testset_name}"
             text = f"{png_name}"

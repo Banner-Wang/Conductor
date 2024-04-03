@@ -119,6 +119,12 @@ decode_method=$(echo "$decode_cmd" | grep -o -- '--decoding-method [^ ]*' | cut 
 
 while true; do
   for testset in "${testsets[@]}"; do
+    data_dir_var_name="${testset^^}_DATA_DIR"
+    if [ ! -d "${!data_dir_var_name}" ]; then
+      echo "Directory for ${!data_dir_var_name} does not exist. Skipping..."
+      continue
+    fi
+
     testset_epoch_dir="${epoch_dir}/${testset}"
     testset_wer_dir="${testset_epoch_dir}/${decode_method}"
     # 建立epoch.pt文件的软链接
