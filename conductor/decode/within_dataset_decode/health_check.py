@@ -112,7 +112,7 @@ def health_check(wer_path, dingding_token, host_ip, dataset_name, testset_name):
 
     # 尝试读取wer_flag.txt文件
     try:
-        with open('wer_flag.txt', 'r') as f:
+        with open(f'wer_flag_{testset_name}.txt', 'r') as f:
             previous_len = int(f.read().strip())
     except (FileNotFoundError, ValueError):
         # 如果文件不存在或无法解析为整数，则视为长度改变
@@ -125,13 +125,15 @@ def health_check(wer_path, dingding_token, host_ip, dataset_name, testset_name):
         save_data_to_file(data, 'wer_summary.txt')
         png_arr = plot_data(data)
         for png_file in png_arr:
-            shutil.move(png_file, f"/s3mnt/AI_VOICE_WORKSPACE/resouce/{dataset_name}_{png_file}")
-            text = f"IP: {host_ip}\ntrain set: {dataset_name}\n decode set: {testset_name}\n{dataset_name}_{png_file}"
+            png_name = f"{dataset_name}_{png_file}"
+            shutil.move(png_file, f"/s3mnt/AI_VOICE_WORKSPACE/resouce/{png_name}")
+            title = f"IP: {host_ip}\ntrain set: {dataset_name}\n decode set: {testset_name}"
+            text = f"{png_name}"
             url = (f"https://pro-ai-voice.s3.us-west-1.amazonaws.com/"
-                   f"AI_VOICE_WORKSPACE/resouce/{dataset_name}_{png_file}")
-            link_dingding(dingding_token, f"WER Summary", text, url)
+                   f"AI_VOICE_WORKSPACE/resouce/{png_name}")
+            link_dingding(dingding_token, title, text, url)
         # 更新wer_flag.txt文件的值为当前长度
-        with open('wer_flag.txt', 'w') as f:
+        with open(f'wer_flag_{testset_name}.txt', 'w') as f:
             f.write(str(current_len))
     else:
         print("File list length unchanged. Skipping file processing.")
