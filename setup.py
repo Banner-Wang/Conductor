@@ -8,7 +8,7 @@ from conductor.utils import get_logger
 
 log = get_logger(os.path.basename(__file__))
 NFS_SERVER_IP = ['10.68.89.114', '172.16.1.223']
-DATASETS = ("commonvoice", "gigaspeech", "libriheavy", "librispeech")
+DATASETS = ("COMMONVOICE", "GIGASPEECH", "LIBRIHEAVY", "LIBRISPEECH")
 
 
 def get_args():
@@ -145,10 +145,14 @@ def update_env_file(env_file_path, **kwargs):
     else:
         __mnt_check('/s3mnt', '/nfsmnt')
 
-    env_dict["COMMONVOICE_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["COMMONVOICE_DATA_DIR"])
-    env_dict["GIGASPEECH_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["GIGASPEECH_DATA_DIR"])
-    env_dict["LIBRIHEAVY_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["LIBRIHEAVY_DATA_DIR"])
-    env_dict["LIBRISPEECH_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["LIBRISPEECH_DATA_DIR"])
+    for dataset in DATASETS:
+        env_dict[f"{dataset}_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict[f"{dataset}_DATA_DIR"])
+        create_symlink(dataset, env_dict)
+
+    # env_dict["COMMONVOICE_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["COMMONVOICE_DATA_DIR"])
+    # env_dict["GIGASPEECH_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["GIGASPEECH_DATA_DIR"])
+    # env_dict["LIBRIHEAVY_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["LIBRIHEAVY_DATA_DIR"])
+    # env_dict["LIBRISPEECH_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["LIBRISPEECH_DATA_DIR"])
 
     if "TRAINING_DIR" not in env_dict:
         cdate = datetime.now().strftime("%Y%m%d%H%M")
@@ -174,12 +178,12 @@ def create_symlink(dataset: str, env_dict: dict):
     if not icefall_path:
         log.error(f"Error: --icefall_path is : {icefall_path}")
         exit(1)
-    dataset_path = env_dict[f"{dataset.upper()}_DATA_DIR"]
+    dataset_path = env_dict[f"{dataset}_DATA_DIR"]
     if not os.path.exists(dataset_path):
         log.warning(f"Warning: Expected path not exist: {dataset_path}. skipping")
         return
 
-    symlink_path = os.path.join(icefall_path, 'egs', dataset, 'ASR')
+    symlink_path = os.path.join(icefall_path, 'egs', dataset.lower(), 'ASR')
     if not os.path.isdir(symlink_path):
         log.error(f"Error: Expected path not exist: {symlink_path}")
         exit(1)
