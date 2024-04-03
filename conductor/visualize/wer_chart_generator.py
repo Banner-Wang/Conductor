@@ -54,7 +54,7 @@ def save_data_to_file(data, file_name):
             f.write(f"{item[0]},{item[1]},{item[2]},{item[3]}\n")
 
 
-def plot_data(data):
+def plot_data(wer_path, data):
     test_sets = list(set(item[0] for item in data))
     png_arr = []
     for test_set in test_sets:
@@ -96,7 +96,8 @@ def plot_data(data):
         fig.tight_layout()
         plt.colorbar(im)
         png_name = f"wer_summary_{test_set}_{bj_time()}.png"
-        plt.savefig(png_name)
+        png_file_path = os.path.join(wer_path, png_name)
+        plt.savefig(png_file_path)
         png_arr.append(png_name)
         plt.close()
     return png_arr
@@ -121,10 +122,11 @@ def main(wer_path, dingding_token, host_ip, dataset_name, testset_name):
         log.info(f"File list length changed from {previous_len} to {current_len}")
         data = process_wer_files(file_list)
         # save_data_to_file(data, 'wer_summary.txt')
-        png_arr = plot_data(data)
+        png_arr = plot_data(wer_path, data)
         for png_file in png_arr:
+            png_file_path = os.path.join(wer_path, png_file)
             png_name = f"{dataset_name}_{png_file}"
-            shutil.move(png_file, f"/s3mnt/AI_VOICE_WORKSPACE/resouce/{png_name}")
+            shutil.copy(png_file_path, os.path.join("/s3mnt/AI_VOICE_WORKSPACE/resouce", png_name))
             title = f"IP: {host_ip}\ntrain set: {dataset_name}\n decode set: {testset_name}"
             text = f"{png_name}"
             url = (f"https://pro-ai-voice.s3.us-west-1.amazonaws.com/"
