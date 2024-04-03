@@ -3,10 +3,10 @@ import argparse
 import subprocess
 import re
 import sys
+import logging
 from datetime import datetime
-from conductor.utils import get_logger
 
-log = get_logger(os.path.basename(__file__))
+
 NFS_SERVER_IP = ['10.68.89.114', '172.16.1.223']
 DATASETS = ("COMMONVOICE", "GIGASPEECH", "LIBRIHEAVY", "LIBRISPEECH")
 
@@ -50,15 +50,15 @@ def get_args():
 def clean_env_file(env_file_path):
     if os.path.exists(env_file_path):
         os.remove(env_file_path)
-        log.info(f"Cleared the contents of {env_file_path}")
+        logging.info(f"Cleared the contents of {env_file_path}")
 
 
 def show_env_file_content(env_file_path):
     if os.path.exists(env_file_path):
         with open(env_file_path, 'r') as file:
-            log.info(f"Contents of {args.env_file}:\n{file.read()}")
+            logging.info(f"Contents of {args.env_file}:\n{file.read()}")
     else:
-        log.error(f"Error: {env_file_path} does not exist.")
+        logging.error(f"Error: {env_file_path} does not exist.")
 
 
 def is_mounted(mount_point):
@@ -72,13 +72,13 @@ def check_docker_compose():
         # 检查 Docker 是否安装
         result = subprocess.run(['docker', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode != 0:
-            log.error("Docker is not installed on this system. Please install Docker first.")
+            logging.error("Docker is not installed on this system. Please install Docker first.")
             return False
 
         # 检查 Docker Compose 是否安装
         result = subprocess.run(['docker', 'compose', 'version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode != 0:
-            log.error("Docker Compose is not installed on this system. Please install Docker Compose first.")
+            logging.error("Docker Compose is not installed on this system. Please install Docker Compose first.")
             return False
 
         # 检查 Docker Compose 版本号是否满足要求
@@ -87,12 +87,12 @@ def check_docker_compose():
         version_parts = version_str.split('.')
         major, minor, patch = [int(part) for part in version_parts]
         if major < 2 or (major == 2 and minor < 25):
-            log.error(f"Your Docker Compose version ({version_str}) is too old. "
+            logging.error(f"Your Docker Compose version ({version_str}) is too old. "
                       f"Please upgrade to version 2.25.0 or later.")
             return False
 
     except Exception as e:
-        log.error(f"Error checking Docker and Docker Compose: {e}")
+        logging.error(f"Error checking Docker and Docker Compose: {e}")
         return False
 
     return True
@@ -101,7 +101,7 @@ def check_docker_compose():
 def __mnt_check(*mnt_dirs):
     for _mnt_dir in mnt_dirs:
         if not is_mounted(_mnt_dir):
-            log.error(f"Error: {_mnt_dir} is not mounted.")
+            logging.error(f"Error: {_mnt_dir} is not mounted.")
             exit(1)
 
 
@@ -117,7 +117,7 @@ def __get_interface_ip():
             ip_address, interface = match
             return ip_address
     except Exception as e:
-        log.error("Error:", e)
+        logging.error("Error:", e)
         return {}
 
 
@@ -149,11 +149,6 @@ def update_env_file(env_file_path, **kwargs):
         env_dict[f"{dataset}_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict[f"{dataset}_DATA_DIR"])
         create_symlink(dataset, env_dict)
 
-    # env_dict["COMMONVOICE_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["COMMONVOICE_DATA_DIR"])
-    # env_dict["GIGASPEECH_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["GIGASPEECH_DATA_DIR"])
-    # env_dict["LIBRIHEAVY_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["LIBRIHEAVY_DATA_DIR"])
-    # env_dict["LIBRISPEECH_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["LIBRISPEECH_DATA_DIR"])
-
     if "TRAINING_DIR" not in env_dict:
         cdate = datetime.now().strftime("%Y%m%d%H%M")
         dataset_src = env_dict.get("DATASET_SRC")
@@ -168,7 +163,7 @@ def update_env_file(env_file_path, **kwargs):
             for key, value in env_dict.items():
                 file.write(f"{key}={value}\n")
     except IOError as error:
-        log.error(f"Error writing to {env_file_path}: {error}")
+        logging.error(f"Error writing to {env_file_path}: {error}")
 
     return env_dict
 
@@ -176,28 +171,29 @@ def update_env_file(env_file_path, **kwargs):
 def create_symlink(dataset: str, env_dict: dict):
     icefall_path = env_dict["ICEFALL_PATH"]
     if not icefall_path:
-        log.error(f"Error: --icefall_path is : {icefall_path}")
+        logging.error(f"Error: --icefall_path is : {icefall_path}")
         exit(1)
     dataset_path = env_dict[f"{dataset}_DATA_DIR"]
     if not os.path.exists(dataset_path):
-        log.warning(f"Warning: Expected path not exist: {dataset_path}. skipping")
+        logging.warning(f"Warning: Expected path not exist: {dataset_path}. skipping")
         return
 
     symlink_path = os.path.join(icefall_path, 'egs', dataset.lower(), 'ASR')
     if not os.path.isdir(symlink_path):
-        log.error(f"Error: Expected path not exist: {symlink_path}")
+        logging.error(f"Error: Expected path not exist: {symlink_path}")
         exit(1)
 
     data_dir = 'data'
     symlink_target = os.path.join(symlink_path, data_dir)
     if not os.path.islink(symlink_target):
         os.symlink(dataset_path, symlink_target)
-        log.info(f"Created symlink for {dataset_path} at {symlink_target}")
+        logging.info(f"Created symlink for {dataset_path} at {symlink_target}")
     else:
-        log.info(f"Symlink already exists for {dataset} at {symlink_target}")
+        logging.info(f"Symlink already exists for {dataset} at {symlink_target}")
 
 
 if __name__ == "__main__":
+    logging.getLogger().setLevel(logging.INFO)
     # Check Docker and Docker Compose installation and version
     if not check_docker_compose():
         sys.exit(1)

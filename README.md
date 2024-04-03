@@ -3,7 +3,6 @@
 - Python 3.10及以上
 - Docker
 - Docker Compose (版本 2.25.0 或更高)
-- pip install dingtalkchatbot
 
 ## 快速开始
 
