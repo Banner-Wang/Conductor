@@ -1,5 +1,4 @@
 import os
-import sys
 import re
 import argparse
 import shutil
@@ -7,8 +6,6 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import numpy as np
 
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(base_dir)
 from conductor.utils import link_dingding, get_logger
 
 log = get_logger(os.path.basename(__file__))
@@ -105,7 +102,7 @@ def plot_data(data):
     return png_arr
 
 
-def health_check(wer_path, dingding_token, host_ip, dataset_name, testset_name):
+def main(wer_path, dingding_token, host_ip, dataset_name, testset_name):
     # 获取当前目录下所有wer-summary开头的文件
     file_list = [os.path.join(wer_path, file) for file in os.listdir(wer_path) if file.startswith('wer-summary')]
     current_len = len(file_list)
@@ -121,7 +118,7 @@ def health_check(wer_path, dingding_token, host_ip, dataset_name, testset_name):
 
     # 如果长度改变，则进行文件处理
     if current_len != previous_len:
-        print(f"File list length changed from {previous_len} to {current_len}")
+        log.info(f"File list length changed from {previous_len} to {current_len}")
         data = process_wer_files(file_list)
         # save_data_to_file(data, 'wer_summary.txt')
         png_arr = plot_data(data)
@@ -137,10 +134,10 @@ def health_check(wer_path, dingding_token, host_ip, dataset_name, testset_name):
         with open(wer_flag_file, 'w') as f:
             f.write(str(current_len))
     else:
-        print("File list length unchanged. Skipping file processing.")
+        log.info("File list length unchanged. Skipping file processing.")
 
 
 if __name__ == "__main__":
     args = get_args()
     wer_path = os.path.join(args.training_dir, args.decode_method)
-    health_check(wer_path, args.dingding_token, args.hostip, args.dataset_name, args.testset_name)
+    main(wer_path, args.dingding_token, args.hostip, args.dataset_name, args.testset_name)

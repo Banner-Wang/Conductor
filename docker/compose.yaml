@@ -32,6 +32,6 @@ services:
       retries: 3
       start_period: 60s
 
-  within_decode:
+  decode:
     <<: *base-service
-    command: bash -c "bash /workspace/Conductor/conductor/decode/within_dataset_decode/decode.sh"
+    command: bash -c "bash /workspace/Conductor/conductor/decode/decode.sh"

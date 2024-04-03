@@ -154,7 +154,7 @@ while true; do
         eval "$decode_cmd"
       done
       cd /workspace/Conductor || exit
-      python3 /workspace/Conductor/conductor/decode/within_dataset_decode/health_check.py $dingding_token $host_ip $dataset "${testset_epoch_dir}" $decode_method $testset
+      python3 conductor/visualize/wer_chart_generator.py $dingding_token $host_ip $dataset "${testset_epoch_dir}" $decode_method $testset
     done
   done
 

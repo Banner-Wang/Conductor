@@ -168,7 +168,7 @@ def update_env_file(env_file_path, **kwargs):
             for key, value in env_dict.items():
                 file.write(f"{key}={value}\n")
     except IOError as error:
-        print(f"Error writing to {env_file_path}: {error}")
+        log.error(f"Error writing to {env_file_path}: {error}")
 
     return env_dict
 

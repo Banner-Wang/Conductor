@@ -96,7 +96,7 @@ docker compose -p <YOUR_DOCKER_NAME> up train -d
 
 ```bash
 cd docker
-docker compose -p <YOUR_DOCKER_NAME> up within_decode -d 
+docker compose -p <YOUR_DOCKER_NAME> up decode -d 
 ```
 
 5. 清空 `.env` 文件的内容:
