@@ -109,10 +109,11 @@ def health_check(wer_path, dingding_token, host_ip, dataset_name, testset_name):
     # 获取当前目录下所有wer-summary开头的文件
     file_list = [os.path.join(wer_path, file) for file in os.listdir(wer_path) if file.startswith('wer-summary')]
     current_len = len(file_list)
+    wer_flag_file = os.path.join(wer_path, 'wer_flag.txt')
 
     # 尝试读取wer_flag.txt文件
     try:
-        with open(f'wer_flag_{testset_name}.txt', 'r') as f:
+        with open(wer_flag_file, 'r') as f:
             previous_len = int(f.read().strip())
     except (FileNotFoundError, ValueError):
         # 如果文件不存在或无法解析为整数，则视为长度改变
@@ -122,7 +123,7 @@ def health_check(wer_path, dingding_token, host_ip, dataset_name, testset_name):
     if current_len != previous_len:
         print(f"File list length changed from {previous_len} to {current_len}")
         data = process_wer_files(file_list)
-        save_data_to_file(data, 'wer_summary.txt')
+        # save_data_to_file(data, 'wer_summary.txt')
         png_arr = plot_data(data)
         for png_file in png_arr:
             png_name = f"{dataset_name}_{png_file}"
@@ -133,7 +134,7 @@ def health_check(wer_path, dingding_token, host_ip, dataset_name, testset_name):
                    f"AI_VOICE_WORKSPACE/resouce/{png_name}")
             link_dingding(dingding_token, title, text, url)
         # 更新wer_flag.txt文件的值为当前长度
-        with open(f'wer_flag_{testset_name}.txt', 'w') as f:
+        with open(wer_flag_file, 'w') as f:
             f.write(str(current_len))
     else:
         print("File list length unchanged. Skipping file processing.")
