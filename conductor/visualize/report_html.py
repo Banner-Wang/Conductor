@@ -120,7 +120,7 @@ def main(dingding_token, host_ip, env_info, loss_link, images_src):
     write_html_file(output_path, soup.prettify())
     s3_output_path = output_path.replace("/s3mnt/", "")
 
-    title = "测试报告"
+    title = "ASR测试报告"
     text = f"训练机器：{host_ip}"
     url = f"https://pro-ai-voice.s3.us-west-1.amazonaws.com/{s3_output_path}"
     link_dingding(dingding_token, title, text, url)

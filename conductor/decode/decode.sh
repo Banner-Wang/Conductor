@@ -180,4 +180,5 @@ while true; do
       echo "All epcohs have been decoded"
       break
   fi
+  sleep 600
 done
