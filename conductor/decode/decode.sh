@@ -31,6 +31,10 @@ decode_cmd="${DECODE_CMD}"
 decode_start_epoch=${DECODE_START_EPOCH}
 decode_end_epoch="${DECODE_END_EPOCH}"
 
+training_dirname=$(basename "$epoch_dir")
+env_path="/workspace/Conductor/docker/.env"
+envinfo=$(<"$env_path")
+
 case $dataset in
   commonvoice)
     bpe_model="$COMMONVOICE_DATA_DIR/en/lang_bpe_500/bpe.model"
@@ -118,6 +122,7 @@ testsets=("commonvoice" "gigaspeech" "libriheavy" "librispeech")
 decode_method=$(echo "$decode_cmd" | grep -o -- '--decoding-method [^ ]*' | cut -d ' ' -f2)
 
 while true; do
+  flag=0
   for testset in "${testsets[@]}"; do
     data_dir_var_name="${testset^^}_DATA_DIR"
     if [ ! -d "${!data_dir_var_name}" ]; then
@@ -158,11 +163,18 @@ while true; do
         echo "decode cmd: $decode_cmd"
         cd /workspace/icefall/egs/"$testset"/ASR || exit
         eval "$decode_cmd"
+        flag=1
       done
-      cd /workspace/Conductor || exit
-      python3 conductor/visualize/wer_chart_generator.py $dingding_token $host_ip $dataset "${testset_epoch_dir}" $decode_method $testset
     done
+    if [ $flag -eq 1 ]; then
+      cd /workspace/Conductor || exit
+      python3 conductor/visualize/wer_chart_generator.py "${testset_epoch_dir}" $decode_method $training_dirname $testset
+    fi
   done
+  if [ $flag -eq 1 ]; then
+    cd /workspace/Conductor || exit
+    python3 conductor/visualize/report_html.py $dingding_token $host_ip "${envinfo}" "https://github.com/Banner-Wang/Conductor" "${training_dirname}"
+  fi
 
   if [ "$last_epoch" -eq "$decode_end_epoch" ]; then
       echo "All epcohs have been decoded"

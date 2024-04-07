@@ -6,18 +6,16 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import numpy as np
 
-from conductor.utils import link_dingding, get_logger
+from conductor.utils import get_logger
 
 log = get_logger(os.path.basename(__file__))
 
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("dingding_token", type=str, help="Dingding robot token.")
-    parser.add_argument("hostip", type=str, help="host IP address.")
-    parser.add_argument("dataset_name", type=str, help="dataset name.")
-    parser.add_argument("training_dir", type=str, help="epoch path to decode.")
+    parser.add_argument("testset_training_dir", type=str, help="testset epoch path to decode.")
     parser.add_argument("decode_method", type=str, help="decode method.")
+    parser.add_argument("training_dir_name", type=str, help="training directory name.")
     parser.add_argument("testset_name", type=str, help="testset name.")
     return parser.parse_args()
 
@@ -103,7 +101,7 @@ def plot_data(wer_path, data):
     return png_arr
 
 
-def main(wer_path, dingding_token, host_ip, dataset_name, testset_name):
+def main(wer_path, s3_testset_training_dir):
     # 获取当前目录下所有wer-summary开头的文件
     file_list = [os.path.join(wer_path, file) for file in os.listdir(wer_path) if file.startswith('wer-summary')]
     current_len = len(file_list)
@@ -121,17 +119,10 @@ def main(wer_path, dingding_token, host_ip, dataset_name, testset_name):
     if current_len != previous_len:
         log.info(f"File list length changed from {previous_len} to {current_len}")
         data = process_wer_files(file_list)
-        # save_data_to_file(data, 'wer_summary.txt')
         png_arr = plot_data(wer_path, data)
         for png_file in png_arr:
             png_file_path = os.path.join(wer_path, png_file)
-            png_name = f"{dataset_name}_{bj_time()}_{png_file}"
-            shutil.copy(png_file_path, os.path.join("/s3mnt/AI_VOICE_WORKSPACE/resouce", png_name))
-            title = f"IP: {host_ip}\ntrain set: {dataset_name}\n decode set: {testset_name}"
-            text = f"{png_name}"
-            url = (f"https://pro-ai-voice.s3.us-west-1.amazonaws.com/"
-                   f"AI_VOICE_WORKSPACE/resouce/{png_name}")
-            link_dingding(dingding_token, title, text, url)
+            shutil.copy(png_file_path, os.path.join(s3_testset_training_dir, png_file))
         # 更新wer_flag.txt文件的值为当前长度
         with open(wer_flag_file, 'w') as f:
             f.write(str(current_len))
@@ -141,5 +132,10 @@ def main(wer_path, dingding_token, host_ip, dataset_name, testset_name):
 
 if __name__ == "__main__":
     args = get_args()
-    wer_path = os.path.join(args.training_dir, args.decode_method)
-    main(wer_path, args.dingding_token, args.hostip, args.dataset_name, args.testset_name)
+    wer_path = os.path.join(args.testset_training_dir, args.decode_method)
+    s3_wer_dir = "/s3mnt/AI_VOICE_WORKSPACE/resouce"
+    s3_testset_training_dir = os.path.join(s3_wer_dir, args.training_dir_name, args.testset_name)
+    if not os.path.exists(s3_testset_training_dir):
+        os.makedirs(s3_testset_training_dir)
+
+    main(wer_path, s3_testset_training_dir)

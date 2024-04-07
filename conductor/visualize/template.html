@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>测试报告</title>
+<style>
+    /* Base styles */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    .module {
+        margin: 20px;
+        padding: 20px;
+        border: 1px solid #ccc;
+    }
+    .image-module-wer-heading {
+        font-size: 24px;
+        text-align: center;
+        color: #333;
+    }
+    .image-module-heading {
+        font-size: 24px;
+        text-align: center;
+        color: #333;
+    }
+    .image-group {
+        margin-bottom: 30px;
+    }
+    .group-description {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+    .images-row {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+    }
+    .image-container {
+        flex: 1 1 48%; /* Use 48% to ensure there is space for margin if needed */
+        margin: 1%; /* Small margin for spacing */
+        box-sizing: border-box; /* Include padding and borders in the element's total width and height */
+    }
+    .image-container img {
+        width: 100%; /* Make the image fill the container */
+        height: auto; /* Keep the aspect ratio */
+    }
+    .environment-info {
+        font-family: 'Courier New', monospace;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 15px;
+        overflow-x: auto;
+    }
+</style>
+</head>
+<body>
+
+<div class="module" id="txt-module">
+    <h2 class="module-heading">环境信息（Env Information）</h2>
+    <pre class="environment-info">
+    这里是环境信息
+    </pre>
+</div>
+
+<div class="module" id="image-module-wer">
+    <h2 class="module-heading">K2 SOTA WER</h2>
+     <img src="https://pro-ai-voice.s3.us-west-1.amazonaws.com/AI_VOICE_WORKSPACE/resouce/k2_wer_sota.png"/>
+</div>
+
+<div class="module" id="image-module">
+
+    <h2 class="image-module-heading">WER数据图表</h2>
+
+</div>
+
+<!-- Link Module -->
+<div class="module link-module" id="link-module">
+    <a href="your-link.com" target="_blank">点击这里获取loss曲线图</a>
+</div>
+</body>
+</html>
