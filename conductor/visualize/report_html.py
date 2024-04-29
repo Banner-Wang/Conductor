@@ -84,26 +84,29 @@ def replace_info(soup, environment_info=None, link=None):
         a_tag['href'] = link
 
 
-# 动态添加image-group的函数
-def add_image_group(soup, test_set, img_src_list):
+def add_image_group(soup, image_group_map):
     image_module = soup.find('div', id='image-module')
     new_image_group = soup.new_tag('div', **{'class': 'image-group'})
-    group_description = soup.new_tag('div', **{'class': 'group-description'})
-    group_description.string = f"{test_set}"
-    new_image_group.append(group_description)
+
+    # Combine all image sources into a single list
+    all_img_src = []
+    for image_group in image_group_map:
+        all_img_src.extend(image_group["img_src_list"])
 
     images_row = soup.new_tag('div', **{'class': 'images-row'})
-    for img_src in img_src_list:
+    for img_src in all_img_src:
         image_container = soup.new_tag('div', **{'class': 'image-container'})
         img_tag = soup.new_tag('img', src=img_src)
         image_container.append(img_tag)
         images_row.append(image_container)
+
     new_image_group.append(images_row)
     image_module.append(new_image_group)
 
 
 def main(dingding_token, host_ip, env_info, loss_link, images_src):
     image_group_map = find_png(images_src)
+    print(image_group_map)
     # 读取模板文件
     template_path = 'conductor/visualize/template.html'  # 您的模板HTML文件路径
     html_content = read_html_file(template_path)
@@ -112,8 +115,7 @@ def main(dingding_token, host_ip, env_info, loss_link, images_src):
     env_info = parse_env(env_info)
     replace_info(soup, environment_info=env_info, link=loss_link)
 
-    for image_group in image_group_map:
-        add_image_group(soup, image_group["test_set"], image_group["img_src_list"])
+    add_image_group(soup, image_group_map)
 
     # 指定新文件的路径
     output_path = os.path.join(images_src, 'output.html')  # 您的输出HTML文件路径
