@@ -53,37 +53,52 @@ def save_data_to_file(data, file_name):
 
 
 def plot_data(wer_path, data):
+    """
+    绘制关于不同测试集和平均值的WER（Word Error Rate）数据图表，并将图表保存为PNG文件。
+
+    参数:
+    wer_path: 字符串，指定保存图表文件的目录路径。
+    data: 列表，包含WER数据，每个元素是四元组，分别表示测试集名称、所处的周期、平均值和WER值。
+
+    返回值:
+    png_arr: 列表，包含生成的图表文件名称（不带路径）。
+    """
+    # 提取唯一的测试集名称
     test_sets = list(set(item[0] for item in data))
     png_arr = []
     for test_set in test_sets:
+        # 提取每个测试集中唯一的周期数和平均值，并进行排序
         epochs = sorted(set(item[1] for item in data if item[0] == test_set))
-        avg_values = sorted(set(item[2] for item in data if item[0] == test_set), reverse=True)  # 反向排序avg值
+        avg_values = sorted(set(item[2] for item in data if item[0] == test_set), reverse=True)
 
-        # 创建一个二维数组来存储WER值
+        # 初始化WER矩阵，并将所有值设为NaN
         wer_matrix = np.zeros((len(avg_values), len(epochs)))
-        wer_matrix[:] = np.nan  # 将所有元素设置为NaN
+        wer_matrix[:] = np.nan
 
+        # 填充WER矩阵
         for item in data:
             if item[0] == test_set:
                 epoch_idx = epochs.index(item[1])
                 avg_idx = avg_values.index(item[2])
                 wer_matrix[avg_idx, epoch_idx] = item[3]
 
+        # 绘制热力图
         fig, ax = plt.subplots(figsize=(10, 8))
         im = ax.imshow(wer_matrix, cmap='YlGn_r')
 
-        # 在每个非空单元格中显示WER值
+        # 在图中显示每个WER值
         for i in range(len(avg_values)):
             for j in range(len(epochs)):
                 if not np.isnan(wer_matrix[i, j]):
                     text = ax.text(j, i, f'{wer_matrix[i, j]:.2f}', ha='center', va='center', color='black')
 
-        # 标红最小的WER值
+        # 标记最小的WER值为红色
         min_wer = np.nanmin(wer_matrix)
         min_indices = np.where(wer_matrix == min_wer)
         for i, j in zip(min_indices[0], min_indices[1]):
             text = ax.text(j, i, f'{wer_matrix[i, j]:.2f}', ha='center', va='center', color='red')
 
+        # 设置图表的刻度和标签
         ax.set_xticks(np.arange(len(epochs)))
         ax.set_yticks(np.arange(len(avg_values)))
         ax.set_xticklabels(epochs)
@@ -93,6 +108,8 @@ def plot_data(wer_path, data):
         ax.set_title(f'WER Summary - {test_set}')
         fig.tight_layout()
         plt.colorbar(im)
+
+        # 保存图表并收集文件名
         png_name = f"wer_summary_{test_set}.png"
         png_file_path = os.path.join(wer_path, png_name)
         plt.savefig(png_file_path)

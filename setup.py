@@ -6,32 +6,18 @@ import sys
 import logging
 from datetime import datetime
 
-
-NFS_SERVER_IP = ['10.68.89.114', '172.16.1.223']
-DATASETS = ("COMMONVOICE", "GIGASPEECH", "LIBRIHEAVY", "LIBRISPEECH")
+NFS_SERVER_IP = []
 
 
 def get_args():
     parser = argparse.ArgumentParser(description='Update .env file')
-    parser.add_argument('--commonvoice_data_dir',
+    parser.add_argument('--feature_data_dir',
                         type=str,
-                        default='AI_VOICE_WORKSPACE/asr/prepared_data/commonvoice/cv_en_161/data',
-                        help='common voice data')
-    parser.add_argument('--gigaspeech_data_dir',
-                        type=str,
-                        default='AI_VOICE_WORKSPACE/asr/prepared_data/gigaspeech/data_XL',
-                        help='gigaspeech data')
-    parser.add_argument('--libriheavy_data_dir',
-                        type=str,
-                        default='AI_VOICE_WORKSPACE/asr/prepared_data/libriheavy/data',
-                        help='libriheavy data')
-    parser.add_argument('--librispeech_data_dir',
-                        type=str,
-                        default='AI_VOICE_WORKSPACE/asr/prepared_data/librispeech/data',
-                        help='librispeech data')
+                        default='speech_feature_data',
+                        help='feature_data dir')
 
     parser.add_argument('--env_file', default='./docker/.env', help='Path to .env file')
-    parser.add_argument('--dataset_src', default='nfsmnt', help='dataset src root path')
+    parser.add_argument('--dataset_src', default='speech_store', help='dataset src root path')
     parser.add_argument('--decode_start_epoch', default=10, type=int, help='start epoch to decode')
     parser.add_argument('--decode_end_epoch', help='end epoch to decode')
     parser.add_argument('--dataset_name', help='dataset name')
@@ -88,7 +74,7 @@ def check_docker_compose():
         major, minor, patch = [int(part) for part in version_parts]
         if major < 2 or (major == 2 and minor < 25):
             logging.error(f"Your Docker Compose version ({version_str}) is too old. "
-                      f"Please upgrade to version 2.25.0 or later.")
+                          f"Please upgrade to version 2.25.0 or later.")
             return False
 
     except Exception as e:
@@ -121,6 +107,31 @@ def __get_interface_ip():
         return {}
 
 
+def create_symlink(key: str, env_dict: dict):
+    icefall_path = env_dict["ICEFALL_PATH"]
+    if not icefall_path:
+        logging.error(f"Error: --icefall_path is : {icefall_path}")
+        exit(1)
+
+    src_dir = env_dict[key.upper()]
+    if not os.path.exists(src_dir):
+        logging.warning(f"Warning: Expected path not exist: {src_dir}. skipping")
+        return
+
+    symlink_path = os.path.join(icefall_path, 'egs/tz/ASR')
+    if not os.path.isdir(symlink_path):
+        logging.error(f"Error: Expected path not exist: {symlink_path}")
+        exit(1)
+
+    data_dir = 'data'
+    symlink_target = os.path.join(symlink_path, data_dir)
+    if not os.path.islink(symlink_target):
+        os.symlink(src_dir, symlink_target)
+        logging.info(f"Created symlink for {src_dir} at {symlink_target}")
+    else:
+        logging.info(f"Symlink already exists for {src_dir} at {symlink_target}")
+
+
 def update_env_file(env_file_path, **kwargs):
     env_dict = {}
 
@@ -143,11 +154,11 @@ def update_env_file(env_file_path, **kwargs):
         env_dict["DATASET_SRC"] = "data"
         __mnt_check('/s3mnt')
     else:
-        __mnt_check('/s3mnt', '/nfsmnt')
+        __mnt_check('/s3mnt', env_dict["DATASET_SRC"])
 
-    for dataset in DATASETS:
-        env_dict[f"{dataset}_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict[f"{dataset}_DATA_DIR"])
-        create_symlink(dataset, env_dict)
+    # 创建feature_data_dir软链接
+    env_dict["FEATURE_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["FEATURE_DATA_DIR"])
+    create_symlink("feature_data_dir", env_dict)
 
     if "TRAINING_DIR" not in env_dict:
         cdate = datetime.now().strftime("%Y%m%d%H%M")
@@ -166,30 +177,6 @@ def update_env_file(env_file_path, **kwargs):
         logging.error(f"Error writing to {env_file_path}: {error}")
 
     return env_dict
-
-
-def create_symlink(dataset: str, env_dict: dict):
-    icefall_path = env_dict["ICEFALL_PATH"]
-    if not icefall_path:
-        logging.error(f"Error: --icefall_path is : {icefall_path}")
-        exit(1)
-    dataset_path = env_dict[f"{dataset}_DATA_DIR"]
-    if not os.path.exists(dataset_path):
-        logging.warning(f"Warning: Expected path not exist: {dataset_path}. skipping")
-        return
-
-    symlink_path = os.path.join(icefall_path, 'egs', dataset.lower(), 'ASR')
-    if not os.path.isdir(symlink_path):
-        logging.error(f"Error: Expected path not exist: {symlink_path}")
-        exit(1)
-
-    data_dir = 'data'
-    symlink_target = os.path.join(symlink_path, data_dir)
-    if not os.path.islink(symlink_target):
-        os.symlink(dataset_path, symlink_target)
-        logging.info(f"Created symlink for {dataset_path} at {symlink_target}")
-    else:
-        logging.info(f"Symlink already exists for {dataset} at {symlink_target}")
 
 
 if __name__ == "__main__":

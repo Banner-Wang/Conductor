@@ -5,14 +5,9 @@ required_vars=(
     "DINGDING_TOKEN"
     "HOST_IP"
     "TRAINING_DIR"
-    "DATASET_NAME"
     "DECODE_CMD"
     "DECODE_START_EPOCH"
     "DECODE_END_EPOCH"
-    "COMMONVOICE_DATA_DIR"
-    "GIGASPEECH_DATA_DIR"
-    "LIBRIHEAVY_DATA_DIR"
-    "LIBRISPEECH_DATA_DIR"
 )
 
 for var in "${required_vars[@]}"; do
@@ -26,7 +21,6 @@ icefall_path=${ICEFALL_PATH}
 dingding_token="${DINGDING_TOKEN}"
 host_ip="${HOST_IP}"
 epoch_dir=${TRAINING_DIR}
-dataset=${DATASET_NAME}
 decode_cmd="${DECODE_CMD}"
 decode_start_epoch=${DECODE_START_EPOCH}
 decode_end_epoch="${DECODE_END_EPOCH}"
@@ -34,29 +28,6 @@ decode_end_epoch="${DECODE_END_EPOCH}"
 training_dirname=$(basename "$epoch_dir")
 env_path="/workspace/Conductor/docker/.env"
 envinfo=$(<"$env_path")
-
-case $dataset in
-  commonvoice)
-    bpe_model="$COMMONVOICE_DATA_DIR/en/lang_bpe_500/bpe.model"
-    lang_dir="$COMMONVOICE_DATA_DIR/en/lang_bpe_500"
-    ;;
-  gigaspeech)
-    bpe_model="$GIGASPEECH_DATA_DIR/lang_bpe_500/bpe.model"
-    lang_dir="$GIGASPEECH_DATA_DIR/lang_bpe_500"
-    ;;
-  libriheavy)
-    bpe_model="$LIBRIHEAVY_DATA_DIR/lang_bpe_500/bpe.model"
-    lang_dir="$LIBRIHEAVY_DATA_DIR/lang_bpe_500"
-    ;;
-  librispeech)
-    bpe_model="$LIBRISPEECH_DATA_DIR/lang_bpe_500/bpe.model"
-    lang_dir="$LIBRISPEECH_DATA_DIR/lang_bpe_500"
-    ;;
-  *)
-    echo "Unknown dataset: $dataset"
-    exit 1
-    ;;
-esac
 
 get_max_epoch() {
     local directory="$1"
@@ -118,18 +89,14 @@ else
 fi
 
 
-testsets=("commonvoice" "gigaspeech" "libriheavy" "librispeech")
+#testsets=("commonvoice" "gigaspeech" "libriheavy" "librispeech")
 decode_method=$(echo "$decode_cmd" | grep -o -- '--decoding-method [^ ]*' | cut -d ' ' -f2)
+decode_cuts=$(echo "$decode_cmd" | grep -o -- '--decoding-method [^ ]*' | cut -d ' ' -f2)
+IFS=',' read -ra testsets <<< "$decode_cuts"
 
 while true; do
   flag=0
   for testset in "${testsets[@]}"; do
-    data_dir_var_name="${testset^^}_DATA_DIR"
-    if [ ! -d "${!data_dir_var_name}" ]; then
-      echo "Directory for ${!data_dir_var_name} does not exist. Skipping..."
-      continue
-    fi
-
     testset_epoch_dir="${epoch_dir}/${testset}"
     testset_wer_dir="${testset_epoch_dir}/${decode_method}"
     # 建立epoch.pt文件的软链接
@@ -153,15 +120,13 @@ while true; do
             -e "s|--epoch [0-9]+|--epoch $epoch|" \
             -e "s|--avg [0-9]+|--avg $avg|" \
             -e "s|--exp-dir [^ ]+|--exp-dir ${testset_epoch_dir}|" \
-            -e "s|--bpe-model [^ ]+|--bpe-model $bpe_model|" \
-            -e "s|--lang-dir [^ ]+|--lang-dir $lang_dir|" \
+            -e "s|--decode-cuts [^ ]+|--decode-cuts ${testset}|" \
             -e "/--epoch [0-9]+/! s|$| --epoch $epoch|" \
             -e "/--avg [0-9]+/! s|$| --avg $avg|" \
             -e "/--exp-dir [^ ]+/! s|$| --exp-dir ${testset_epoch_dir}|" \
-            -e "/--bpe-model [^ ]+/! s|$| --bpe-model $bpe_model|" \
-            -e "/--lang-dir [^ ]+/! s|$| --lang-dir $lang_dir|")
+            -e "/--decode-cuts [^ ]+/! s|$| --decode-cuts ${testset}|"
         echo "decode cmd: $decode_cmd"
-        cd /workspace/icefall/egs/"$testset"/ASR || exit
+        cd /workspace/icefall/egs/tz/ASR || exit
         eval "$decode_cmd"
         flag=1
       done
