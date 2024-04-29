@@ -154,7 +154,7 @@ def update_env_file(env_file_path, **kwargs):
         env_dict["DATASET_SRC"] = "data"
         __mnt_check('/s3mnt')
     else:
-        __mnt_check('/s3mnt', env_dict["DATASET_SRC"])
+        __mnt_check('/s3mnt', "/" + env_dict["DATASET_SRC"])
 
     # 创建feature_data_dir软链接
     env_dict["FEATURE_DATA_DIR"] = os.path.join('/', env_dict["DATASET_SRC"], env_dict["FEATURE_DATA_DIR"])
