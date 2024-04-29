@@ -89,9 +89,8 @@ else
 fi
 
 
-#testsets=("commonvoice" "gigaspeech" "libriheavy" "librispeech")
 decode_method=$(echo "$decode_cmd" | grep -o -- '--decoding-method [^ ]*' | cut -d ' ' -f2)
-decode_cuts=$(echo "$decode_cmd" | grep -o -- '--decoding-method [^ ]*' | cut -d ' ' -f2)
+decode_cuts=$(echo "$decode_cmd" | grep -o -- '--decode-cuts [^ ]*' | cut -d ' ' -f2 | sed "s/['\"]//g")
 IFS=',' read -ra testsets <<< "$decode_cuts"
 
 while true; do
@@ -124,7 +123,7 @@ while true; do
             -e "/--epoch [0-9]+/! s|$| --epoch $epoch|" \
             -e "/--avg [0-9]+/! s|$| --avg $avg|" \
             -e "/--exp-dir [^ ]+/! s|$| --exp-dir ${testset_epoch_dir}|" \
-            -e "/--decode-cuts [^ ]+/! s|$| --decode-cuts ${testset}|"
+            -e "/--decode-cuts [^ ]+/! s|$| --decode-cuts ${testset}|")
         echo "decode cmd: $decode_cmd"
         cd /workspace/icefall/egs/tz/ASR || exit
         eval "$decode_cmd"
