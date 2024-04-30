@@ -14,3 +14,5 @@ RUN pip install \
     pandas \
     dingtalkchatbot \
     matplotlib
+
+RUN sed -i 's/e-5/e-3/g' /opt/conda/lib/python3.10/site-packages/lhotse/features/base.py
