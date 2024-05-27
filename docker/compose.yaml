@@ -35,3 +35,9 @@ services:
   decode:
     <<: *base-service
     command: bash -c "bash /workspace/Conductor/conductor/decode/decode.sh"
+    healthcheck:
+      test: [ "CMD", "python", "/workspace/Conductor/conductor/decode/health_check.py", "${DINGDING_TOKEN}", "${HOST_IP}", "${DATASET_NAME}" ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

@@ -68,7 +68,6 @@ def alert_dingding(token, hostip, dataset_name, alert_level, message):
                alert_application=alert_application, hostip=hostip, message=message)
 
     log.debug(formatted_alert)
-    log.debug(formatted_alert)
     notify_dingding(token, formatted_alert)
 
 
